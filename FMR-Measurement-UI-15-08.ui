@@ -54,7 +54,7 @@
     <item row="1" column="2">
      <widget class="QLabel" name="anglelabel">
       <property name="text">
-       <string>WINKEL ANZEIGE</string>
+       <string>NaN</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -83,7 +83,7 @@
        </font>
       </property>
       <property name="text">
-       <string>FELD ANZEIGE</string>
+       <string>NaN</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>
@@ -152,7 +152,7 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>131</width>
+     <width>214</width>
      <height>75</height>
     </size>
    </property>
@@ -211,7 +211,7 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_2">
+  <widget class="QDockWidget" name="measurementdock">
    <property name="floating">
     <bool>false</bool>
    </property>
@@ -231,8 +231,8 @@
   <widget class="QDockWidget" name="magnetfieldock">
    <property name="minimumSize">
     <size>
-     <width>0</width>
-     <height>0</height>
+     <width>280</width>
+     <height>79</height>
     </size>
    </property>
    <property name="features">
@@ -320,8 +320,8 @@
   <widget class="QDockWidget" name="goniometerdock">
    <property name="minimumSize">
     <size>
-     <width>0</width>
-     <height>0</height>
+     <width>63</width>
+     <height>34</height>
     </size>
    </property>
    <property name="windowTitle">
@@ -352,9 +352,7 @@
     <string>OPEN NEW WINDOW TO SELECT EITHER VNA OR LOCK-IN</string>
    </property>
   </action>
-  <zorder>magfielddock</zorder>
-  <zorder>dockWidget</zorder>
-  <zorder>dockWidget_2</zorder>
+  <zorder>measurementdock</zorder>
   <zorder>magnetfieldock</zorder>
   <zorder>goniometerdock</zorder>
  </widget>
