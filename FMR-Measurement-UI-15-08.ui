@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="3" column="0" colspan="3">
-     <widget class="QGraphicsView" name="graphicsView">
+     <widget class="Plot_pyqtgraph" name="graphicsView">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -118,7 +118,7 @@
      <x>0</x>
      <y>0</y>
      <width>1010</width>
-     <height>21</height>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
@@ -290,7 +290,7 @@
      <item row="1" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QDoubleSpinBox" name="doubleSpinBox">
+        <widget class="QDoubleSpinBox" name="dBspinboxFieldIncr">
          <property name="locale">
           <locale language="English" country="UnitedKingdom"/>
          </property>
@@ -356,6 +356,13 @@
   <zorder>magnetfieldock</zorder>
   <zorder>goniometerdock</zorder>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Plot_pyqtgraph</class>
+   <extends>QGraphicsView</extends>
+   <header>customwidgets</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
