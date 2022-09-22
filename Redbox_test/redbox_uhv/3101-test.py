@@ -5,9 +5,6 @@ import sys
 import os
 import math
 
-
-# channel =  1 slope =  0.9877 intercept =  310.7381
-
 def toContinue():
   answer = input('Continue [yY]? ')
   if (answer == 'y' or answer == 'Y'):
@@ -19,33 +16,11 @@ def main():
   # initalize the class
   try:
     usb3100 = usb_3101()
-  except:
-    try:
-      usb3100 = usb_3102()
-    except:
-      try:
-        usb3100 = usb_3103()
-      except:
-        try:
-          usb3100 = usb_3104()
-        except:
-          try:
-            usb3100 = usb_3105()
-          except:
-            try:
-              usb3100 = usb_3106()
-            except:
-              try:
-                usb3100 = usb_3110()
-              except:
-                try:
-                  usb3100 = usb_3112()
-                except:
-                  try:
-                    usb3100 = usb_3114()
-                  except:
-                    print('No USB-31XX device found')
-                    return
+  except Exception as e:
+    print(e)
+
+    print('No USB-31XX device found')
+    return
 
   print("Manufacturer: %s" % usb3100.h.get_manufacturer_string())
   print("Product: %s" % usb3100.h.get_product_string())
@@ -147,29 +122,57 @@ def main():
       for i in range(0x0, 0xff, 32):
         memory = usb3100.MemRead(i, 32)
         for j in range(0, 32, 2):
-          print('address =', hex(j+i), '\tvalue = ', hex(memory[j]),'\t\taddress =', hex(j+i+1), '\tvalue = ', hex(memory[j+1]))
+          try:
+            print('address =', hex(j+i), '\tvalue = ', hex(memory[j]),'\t\taddress =', hex(j+i+1), '\tvalue = ', hex(memory[j+1]))
+            print(memory)
+          except IndexError:
+            pass
       print(' ')
       print('reading from FLASH: ')
       for i in range(0x0100,0x02ff,32):
         memory = usb3100.MemRead(i, 32)
         for j in range(0, 32, 2):
-          print('address =', hex(j+i), '\tvalue = ', hex(memory[j]),'\t\taddress =', hex(j+i+1), '\tvalue = ', hex(memory[j+1]))
+          try:
+            print('address =', hex(j+i), '\tvalue = ', hex(memory[j]),'\t\taddress =', hex(j+i+1), '\tvalue = ', hex(memory[j+1]))
+          except IndexError:
+            pass
     elif ch == 's':
       print('Status = ',hex(usb3100.Status()))
     elif ch == 'x':
-      channel = 0
+      channel = 2
       gain = int(0)
-      for eV in range(0, 100, 1):
-        voltage = 0.00399 * eV - 0.00855
-        value = usb3100.volts(gain, voltage)
-        usb3100.AOutConfig(channel, gain)
-        usb3100.AOut(channel, value, 0)
-        time.sleep(2)
-
-      voltage = 0
+      voltage = 0.004 * 350 - 0.01873
       value = usb3100.volts(gain, voltage)
       usb3100.AOutConfig(channel, gain)
       usb3100.AOut(channel, value, 0)
+
+      for eV in range(0, 10, 1):
+        voltage = 0.004 * eV - 0.0187 
+        value = usb3100.volts(gain, voltage)
+        value = value + 0.9878 + 335.3961
+        value = 20000 + eV * 1000
+        usb3100.AOutConfig(channel, gain)
+        usb3100.AOut(channel, value, 0)
+        time.sleep(5)
+
+      voltage = 0
+      #value = usb3100.volts(gain, voltage)
+      #usb3100.AOutConfig(channel, gain)
+      #usb3100.AOut(channel, value, 0)
+
+
+
+'''
+Product: USB-3101
+Serial No: 00071787
+channel =  0 slope =  0.9878 intercept =  335.3961
+channel =  1 slope =  0.9877 intercept =  310.7381
+channel =  2 slope =  0.9878 intercept =  247.1620
+channel =  3 slope =  0.9879 intercept =  261.4377
+channel =  4 slope =  nan intercept =  nan
+channel =  5 slope =  nan intercept =  nan
+channel =  6 slope =  nan intercept =  nan
+channel =  7 slope =  nan intercept =  nan'''
       
 if __name__ == "__main__":
   main()

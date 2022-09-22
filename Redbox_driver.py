@@ -1,7 +1,7 @@
 import hid
 import time
 from struct import *
-from lib.mccUSB import *
+from mccUSB import *
     
 class usb_3100(mccUSB):    # HID USB-31XX devices
   DIO_DIR_IN   = 0x1  # input direction
@@ -155,7 +155,7 @@ class usb_3100(mccUSB):    # HID USB-31XX devices
       raise ValueError('AOut: channel out of range.')
       return
 
-    value = int(self.CalTable[channel].slope*value + self.CalTable[channel].intercept)
+    value = int(0.9877*value + 310.7381)
 
     if value > 0xffff:
       value = 0xffff
@@ -198,9 +198,9 @@ class usb_3100(mccUSB):    # HID USB-31XX devices
       raise ValueError('AOutConfig: gain value out of range')
       return
 
-    self.CalTable[channel].slope ,= unpack('f', self.MemRead(address, 4))
+    #self.CalTable[channel].slope ,= unpack('f', self.MemRead(address, 4))
     address += 4
-    self.CalTable[channel].intercept ,= unpack('f', self.MemRead(address, 4))
+    #self.CalTable[channel].intercept ,= unpack('f', self.MemRead(address, 4))
 
 
   #################################
@@ -326,6 +326,7 @@ class usb_3100(mccUSB):    # HID USB-31XX devices
       value = self.h.read(2, 100)
     except:
       print('Error in reading Status')
+    print(value)
     return value[1]
     
   #################################

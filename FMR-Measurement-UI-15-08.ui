@@ -10,6 +10,12 @@
     <height>480</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
@@ -28,7 +34,7 @@
       </property>
       <property name="baseSize">
        <size>
-        <width>600</width>
+        <width>800</width>
         <height>350</height>
        </size>
       </property>
@@ -118,7 +124,7 @@
      <x>0</x>
      <y>0</y>
      <width>1010</width>
-     <height>18</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
@@ -145,16 +151,10 @@
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="signalwindowdock">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>214</width>
-     <height>75</height>
-    </size>
    </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
@@ -208,6 +208,84 @@
        </property>
       </widget>
      </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Time constant:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="SpinBox_custom" name="spinBoxTC">
+       <property name="locale">
+        <locale language="English" country="UnitedKingdom"/>
+       </property>
+       <property name="suffix">
+        <string>s</string>
+       </property>
+       <property name="decimals">
+        <number>7</number>
+       </property>
+       <property name="minimum">
+        <double>0.000001000000000</double>
+       </property>
+       <property name="maximum">
+        <double>300.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.050000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Modulation Freq:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="SpinBox_custom" name="spinBoxModFreq">
+       <property name="locale">
+        <locale language="English" country="UnitedKingdom"/>
+       </property>
+       <property name="suffix">
+        <string>Hz</string>
+       </property>
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="maximum">
+        <double>2000000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>13000.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QCheckBox" name="checkBox">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Average</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QSpinBox" name="spinBox">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
   </widget>
@@ -229,12 +307,6 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="magnetfieldock">
-   <property name="minimumSize">
-    <size>
-     <width>280</width>
-     <height>79</height>
-    </size>
-   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
@@ -294,6 +366,9 @@
          <property name="locale">
           <locale language="English" country="UnitedKingdom"/>
          </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
          <property name="maximum">
           <double>100.000000000000000</double>
          </property>
@@ -314,16 +389,31 @@
        </item>
       </layout>
      </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="comboBox_sweepDirection">
+       <item>
+        <property name="text">
+         <string>Up (low field -&gt; high field)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Down (high field -&gt; low field)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Sweep direction:</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="goniometerdock">
-   <property name="minimumSize">
-    <size>
-     <width>63</width>
-     <height>34</height>
-    </size>
-   </property>
    <property name="windowTitle">
     <string>Goniometer Settings</string>
    </property>
@@ -360,6 +450,11 @@
   <customwidget>
    <class>Plot_pyqtgraph</class>
    <extends>QGraphicsView</extends>
+   <header>customwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>SpinBox_custom</class>
+   <extends>QDoubleSpinBox</extends>
    <header>customwidgets</header>
   </customwidget>
  </customwidgets>
