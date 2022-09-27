@@ -127,7 +127,8 @@ class Plot_pyqtgraph(QtWidgets.QWidget):
         self.vbl.addWidget(self.win)
         self.setLayout(self.vbl)
 
-        self.plot = self.plt.plot()
+        self.plotX = self.plt.plot()
+        self.plotY = self.plt.plot()
 
 
 class ParameterPlot(QtWidgets.QWidget):

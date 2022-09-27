@@ -19,6 +19,7 @@ from Measurement import SweepMeasurement
 from contextlib import ExitStack
 
 
+
 class MyForm(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -250,7 +251,8 @@ class MyForm(QMainWindow):
 
         #r = np.sqrt(x**2 + y**2)
 
-        self.ui.graphicsView.plot.setData(self.plotData["field"], self.plotData["y"])
+        self.ui.graphicsView.plotX.setData(self.plotData["field"], self.plotData["x"], pen=None, symbol='o', symbolPen=None, symbolSize=4, symbolBrush=('b'))
+        self.ui.graphicsView.plotY.setData(self.plotData["field"], self.plotData["y"], pen=None, symbol='o', symbolPen=None, symbolSize=4, symbolBrush=('r'))
 
     def newDataFile(self, measType:str):
         try:
