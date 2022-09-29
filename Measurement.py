@@ -35,11 +35,31 @@ class SweepMeasurement(QThread):
         elif self.sweepDirection == "down":
             self.sweepRange = np.arange(self.range[1], self.range[0], -self.stepSize)
         #print(self.range, self.sweepRange, self.stepSize)
-        self.setFieldSafe(self.sweepRange[0]/1000) # Safely move field to start val
+        #self.setFieldSafe(self.sweepRange[0]/1000) # Safely move field to start val
 
     def run(self):
+        def setFieldSafe(val):
+            print("Setting field save!")
+            # drive the field to value according to maxFieldSpeed
+            # First get current field value and determine the distance to the next field step "val"
+            # if distance bigger than maximum field rate (default: 100 mT/s) safely change the field according to field rate
+            self.meterUsageSig.emit(True)
 
+            self.field = self.TeslaM.getField()  # Read field value
 
+            self.meterUsageSig.emit(False)
+
+            # Amount of steps needed to safely reach desired field val; math.ceil() rounds up to smallest bigger integer
+            steps = math.ceil(abs(self.field - val) / self.maxFieldSpeed)
+            print("Number ov steps", steps)
+
+            for fieldStep in np.linspace(self.field, val, num=10*steps+1):
+                self.fieldMoveSig.emit(fieldStep / 1000)
+                self.Magnet.setField(fieldStep / 1000)
+                print("Set field to:", fieldStep)
+                time.sleep(0.1)
+
+        setFieldSafe(self.sweepRange[0] / 1000)  # Safely move field to start val
         try:
             self.meterUsageSig.emit(True)
             #self.fieldMoveSig.emit(True)
@@ -69,7 +89,7 @@ class SweepMeasurement(QThread):
             self.LockIn.outputOff()
             self.FreqGen.outputOff()
 
-            self.setFieldSafe(0.0)
+            setFieldSafe(0.0)
 
             #self.fieldMoveSig.emit(False)
             self.meterUsageSig.emit(False)

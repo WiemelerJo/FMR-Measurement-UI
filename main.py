@@ -19,7 +19,6 @@ from Measurement import SweepMeasurement
 from contextlib import ExitStack
 
 
-
 class MyForm(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -58,6 +57,10 @@ class MyForm(QMainWindow):
         # self.angleTimer.start(250)
         #self.setField(500)
 
+        self.xDataPen = pg.mkPen(color="g")
+        self.yDataPen = pg.mkPen(color="r")
+        self.plotXState = True
+        self.plotYState = True
 
     def initDevices(self):
         # Load ini-file (can be modified using the GUI or manually in the presets.ini file)
@@ -83,8 +86,6 @@ class MyForm(QMainWindow):
         self.LockIn = LockIn_Zurich()
         self.Magnet = MagnetPowerRedLab(self.calibration) #MagnetPowerSupply(self.config["Magnet Powersupply"].get("address"))
         self.setField(0.0)
-        #self.polarsierDevice = Polariser()
-        #print(config["Magnet Powersupply"].get("address"))
 
     def changeMeasurementType(self, *args, **kwargs):
         # Combobox index
@@ -104,9 +105,8 @@ class MyForm(QMainWindow):
 
     def loadFieldCalibration(self):
         calib_raw = np.loadtxt("calibMagnet.dat")
-        self.calibration = interp1d(calib_raw[2], calib_raw[2]) # Volt(field)
+        self.calibration = interp1d(calib_raw[2], calib_raw[0]) # Volt(field)
         #print("Wrong calibration!!! Testing output for now!")
-
 
     def setFieldRange(self):
         try:
@@ -204,12 +204,14 @@ class MyForm(QMainWindow):
         self.clearPlotData()
 
     def stopThread(self):
-        self.measThread.terminate()
-        self.toggleFieldTimer(False)
-        self.outputFile.close()
-        self.LockIn.outputOff()
-        self.FreqGen.outputOff()
-        self.setField(0.0)
+        if self.measThread.isRunning():
+            self.measThread.terminate()
+            self.toggleFieldTimer(False)
+            self.outputFile.close()
+            self.LockIn.outputOff()
+            self.FreqGen.outputOff()
+            self.setField(0.0)
+
 
     def startFreqSweep(self):
         return
@@ -228,6 +230,27 @@ class MyForm(QMainWindow):
         self.plotData["phase"] = array("d")
         self.plotData["field"] = array("d")
 
+        self.ui.graphicsView.vb.plot1CheckBox.stateChanged.connect(self.togglePlot1)
+        self.ui.graphicsView.vb.plot2CheckBox.stateChanged.connect(self.togglePlot2)
+
+    def togglePlot1(self, *args):
+        if args[0]:
+            self.ui.graphicsView.plotX.setData(self.plotData["field"], self.plotData["x"]
+                                               , pen=self.xDataPen, symbolPen=None, symbolSize=4, symbolBrush=('g'))
+            self.plotXState = True
+        else:
+            self.ui.graphicsView.plotX.clear()
+            self.plotXState = False
+
+    def togglePlot2(self, *args):
+        if args[0]:
+            self.ui.graphicsView.plotY.setData(self.plotData["field"], self.plotData["y"]
+                                               , pen=self.yDataPen, symbolPen=None, symbolSize=4, symbolBrush=('r'))
+            self.plotYState = True
+        else:
+            self.ui.graphicsView.plotY.clear()
+            self.plotYState = False
+
     def getSweepData(self, data:dict):
         self.field = data["field"]
         self.ui.fieldlabel.setText(str(self.field) + " [mT]")
@@ -245,14 +268,13 @@ class MyForm(QMainWindow):
     def updatePlot(self):
         # Add functionality to choose what to plot
 
-        print("Plotting not fully implemented yet!")
-        #x = np.array(self.plotData["x"])
-        #y = np.array(self.plotData["y"])
+        if self.plotXState:
+            self.ui.graphicsView.plotX.setData(self.plotData["field"], self.plotData["x"]
+                                               , pen=self.xDataPen, symbolPen=None, symbolSize=4, symbolBrush=('g'))
 
-        #r = np.sqrt(x**2 + y**2)
-
-        self.ui.graphicsView.plotX.setData(self.plotData["field"], self.plotData["x"], pen=None, symbol='o', symbolPen=None, symbolSize=4, symbolBrush=('b'))
-        self.ui.graphicsView.plotY.setData(self.plotData["field"], self.plotData["y"], pen=None, symbol='o', symbolPen=None, symbolSize=4, symbolBrush=('r'))
+        if self.plotYState:
+            self.ui.graphicsView.plotY.setData(self.plotData["field"], self.plotData["y"]
+                                               , pen=self.yDataPen, symbolPen=None, symbolSize=4, symbolBrush=('r'))
 
     def newDataFile(self, measType:str):
         try:
@@ -315,13 +337,13 @@ class MyForm(QMainWindow):
             "Current Limit [A]": 60,
             "Allow negative current?": False,
             "Calibration-File": "magnet-calib.dat",
-            "Maximum field rate [mT/s]": 100
+            "Maximum field rate [mT/s]": 50
         }
 
         config["Lock-In"] = {
-            "Time Constant [ms]": 300,
+            "Time Constant [ms]": 100,
             "Sensitivity [mV]": 1,
-            "Modulation Frequency [kHz]": 13
+            "Modulation Frequency [kHz]": 3
         }
 
         config["R&S-Frequency Generator"] = {

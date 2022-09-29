@@ -127,7 +127,7 @@ class Ui_MainWindow(object):
         self.spinBoxModFreq.setDecimals(4)
         self.spinBoxModFreq.setMaximum(2000000.0)
         self.spinBoxModFreq.setSingleStep(1.0)
-        self.spinBoxModFreq.setProperty("value", 13000.0)
+        self.spinBoxModFreq.setProperty("value", 3000.0)
         self.spinBoxModFreq.setObjectName("spinBoxModFreq")
         self.formLayout_2.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.spinBoxModFreq)
         self.checkBox = QtWidgets.QCheckBox(self.dockWidgetContents_3)

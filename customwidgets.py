@@ -1,6 +1,7 @@
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.graphicsItems.ViewBox import ViewBoxMenu
+from pyqtgraph.Qt import QtGui, QtCore
 import matplotlib
 
 matplotlib.use('Qt5Agg')
@@ -8,7 +9,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.Qt import Qt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas, NavigationToolbar2QT as NavigationToolbar
-
+from PyQt5.QtCore import pyqtSignal
 
 class SpinBox_custom(pg.SpinBox):
     def __init__(self, parent=None):
@@ -109,6 +110,66 @@ class Small_Plot(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
 
+
+
+class CustomVB(pg.ViewBox):
+    plot1Toggled = pyqtSignal(int)
+    plot2Toggled = pyqtSignal(int)
+
+    def __init__(self, *args, **kwds):
+        kwds['enableMenu'] = True
+        pg.ViewBox.__init__(self, *args, **kwds)
+        self.menuSet = False
+        self.plot1CheckBox = QtWidgets.QCheckBox("Toggle X-Channel")
+        self.plot1CheckBox.setChecked(True)
+        self.plot2CheckBox = QtWidgets.QCheckBox("Toggle Y-Channel")
+        self.plot2CheckBox.setChecked(True)
+
+    def mouseClickEvent(self, ev):
+        if ev.button() == QtCore.Qt.MouseButton.RightButton:
+            if self.raiseContextMenu(ev):
+                ev.accept()
+
+    def raiseContextMenu(self, ev):
+        menu = self.getContextMenus()
+
+        menu = self.scene().addParentContextMenus(self, menu, ev)
+
+        pos = ev.screenPos()
+        menu.popup(QtCore.QPoint(int(pos.x()), int(pos.y())))
+        return True
+
+    def getContextMenus(self, event=None):
+
+        if not self.menuSet:
+            self.menuAdded = QtGui.QMenu()
+            self.menuAdded.setTitle("self.name" + " options..")
+
+            self.menuAdded.addSeparator()
+            plot1 = QtGui.QWidgetAction(self.menuAdded)
+            plot1.setDefaultWidget(self.plot1CheckBox)
+            self.menuAdded.addAction(plot1)
+            self.menuAdded.plot1 = plot1
+
+            plot2 = QtGui.QWidgetAction(self.menuAdded)
+            plot2.setDefaultWidget(self.plot2CheckBox)
+            self.menuAdded.addAction(plot2)
+            self.menuAdded.plot2 = plot2
+
+            existingActions = self.menu.actions()
+            actsToAdd = []
+            for menuOrAct in existingActions:
+                actsToAdd.append(menuOrAct)
+
+            self.menuAdded.addSeparator()
+
+            self.menuAdded.addActions(actsToAdd)
+
+            self.menuSet = True
+
+        return self.menuAdded
+
+
 class Plot_pyqtgraph(QtWidgets.QWidget):
     def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self, parent)  # Inherit from QWidget
@@ -116,9 +177,9 @@ class Plot_pyqtgraph(QtWidgets.QWidget):
         self.win = pg.GraphicsLayoutWidget()
 
         #self.win.setBackground("w")
-
-        self.plt = self.win.addPlot()
-        self.plt.setLabel('left', "Lock-In Signal R", units='V')  # Y-Axis
+        self.vb = CustomVB()
+        self.plt = self.win.addPlot(viewBox=self.vb)
+        self.plt.setLabel('left', "Lock-In Intensity", units='V')  # Y-Axis
         self.plt.setLabel('bottom', 'Magnetic field', units='T')  # X-Axis
         self.plt.showGrid(True, True)  # Show Grid
         self.plt.setAxisItems({"right": pg.AxisItem("right"), "top": pg.AxisItem("top")})
@@ -127,8 +188,9 @@ class Plot_pyqtgraph(QtWidgets.QWidget):
         self.vbl.addWidget(self.win)
         self.setLayout(self.vbl)
 
-        self.plotX = self.plt.plot()
-        self.plotY = self.plt.plot()
+        self.plotX = self.plt.plot(name="X-Channel")
+        self.plotY = self.plt.plot(name="Y-Channel")
+
 
 
 class ParameterPlot(QtWidgets.QWidget):
