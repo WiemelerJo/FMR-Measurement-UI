@@ -341,7 +341,7 @@ class LockIn_Zurich:
         daq.setDouble('/dev280/oscs/0/freq', 3000) # Set modulation frequency
         daq.setInt('/dev280/sigouts/0/on', 0) # Toggle output off
         daq.setDouble('/dev280/sigouts/0/amplitudes/6', 0.5) # Set modulation amp to 5V peak to peak
-        daq.setInt('/dev280/demods/0/order', 8) # Set low pass filter bandpass to 8th order
+        daq.setInt('/dev280/demods/0/order', 3) # Set low pass filter bandpass to 8th order
         daq.setInt('/dev280/demods/0/sinc', 1) # Activate Sinc filtering
         daq.setInt('/dev280/sigins/0/diff', 0) # Switch differential measurement off
         daq.setInt('/dev280/sigins/0/imp50', 1) # Switch On 50 Ohm input
