@@ -14,7 +14,7 @@ from datetime import datetime
 from array import array
 from customwidgets import *
 
-from Measurement import SweepMeasurement
+from Measurement import SweepMeasurement, FreqSweepMeasurement
 
 from contextlib import ExitStack
 
@@ -122,6 +122,7 @@ class MyForm(QMainWindow):
             self.ui.frequenciesFrom.setEnabled(True)
             self.ui.spinBoxFreqStep.setEnabled(True)
         #self.checkNeededDevices()
+        self.measType = measType
 
     def checkNeededDevices(self):
         # Function to check if necessary devices are present and working
@@ -188,6 +189,8 @@ class MyForm(QMainWindow):
         self.infos["sweepDirection"] = self.sweepDirections[self.ui.comboBox_sweepDirection.currentIndex()]
         self.infos["MWFreq"] = 10 # GHz
         self.infos["MWPow"] = 13 # dBm
+
+
         self.infos["FreqSweep"] = [] # List of driven Frequencies
 
     def measThreadTogglePause(self):
@@ -224,11 +227,25 @@ class MyForm(QMainWindow):
             self.outputFile.close()
             self.LockIn.outputOff()
             self.FreqGen.outputOff()
+            self.FreqGen.setFreq(5.0)
+            self.FreqGen.setPower(5.0)
             self.setField(0.0)
 
     def startFreqSweep(self):
+        self.gatherInfos()
 
-        return
+        self.measThread = FreqSweepMeasurement(self.Magnet, self.TslMeter,self.LockIn, self.FreqGen, self.infos)
+        self.measThread.start()
+        self.measThread.dataOutSig.connect(self.getFreqSweepData)
+        self.measThread.fieldMoveSig.connect(self.isFieldMoving)
+        self.measThread.meterUsageSig.connect(self.toggleFieldTimer)
+        self.measThread.errorSig.connect(self.errorMSG)
+
+        self.ui.progressBar.setMaximum(99)
+
+        self.newDataFile("FreqSweep")
+        self.outputFile.write("Magnetic Field [T]\tX-Channel\tY-Channel\tPhase\tFrequency [GHz]\n")
+        self.clearPlotData()
 
     def startFieldAngDep(self):
         return
@@ -276,6 +293,20 @@ class MyForm(QMainWindow):
         self.plotData["phase"].append(float(data["phase"]))
 
         self.outputFile.write(f"{self.field}\t{self.plotData['x'][-1]}\t{self.plotData['y'][-1]}\t{self.plotData['phase'][-1]}\n")
+
+        self.updatePlot()
+
+    def getFreqSweepData(self, data:dict):
+        self.field = data["field"]
+        self.ui.fieldlabel.setText(str(self.field) + " [mT]")
+
+        data = data["data"]
+        self.plotData["field"].append(self.field/1000)
+        self.plotData["x"].append(float(data["x"]))
+        self.plotData["y"].append(float(data["y"]))
+        self.plotData["phase"].append(float(data["phase"]))
+
+        self.outputFile.write(f"{self.field}\t{self.plotData['x'][-1]}\t{self.plotData['y'][-1]}\t{self.plotData['phase'][-1]}\t{data['freq']}\n")
 
         self.updatePlot()
 

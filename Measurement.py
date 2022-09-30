@@ -179,7 +179,7 @@ class FreqSweepMeasurement(QThread):
     meterUsageSig = pyqtSignal(bool)
     errorSig = pyqtSignal(str)
 
-    def __init__(self, MagnetPWR, TeslaMeter, LockIn, FreqGen):
+    def __init__(self, MagnetPWR, TeslaMeter, LockIn, FreqGen, infos):
         super(FreqSweepMeasurement, self).__init__()
 
         self.pause = False

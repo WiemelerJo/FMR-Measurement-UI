@@ -24,6 +24,51 @@ class RedLab:
     def VOut(self, channel, value):
         ul.v_out(self.boardNum, channel, self.ranges[0], value)
 
+class RedLabDigital:
+    # The class is very focused on the usage of ME1208LS as of usage in FreqUmschalter
+    # If I have time and motivation later, I will generalise it more
+    def __init__(self, boardNum=0):
+        self.boardNum = boardNum
+
+        # 8-18 GHz: Zirk 0
+        # 18-26 GHz: Zirk 1
+        # 27-31 GHz: Zirk 2
+        # 31-33 GHz: Zirk 3
+        # 33-37 GHz: Zirk 4
+        # 37-40 GHz: Zirk 5
+        # The A/D converter sets a 8bit digital out signal, on which DIO ports 0-7 of PORTA (left side of device) act as
+        # 1bit each. This means to select single circulators one must address
+        # [10000000] = 1, [01000000] = 2, [00100000] = 4, .....
+        # On which each 1/0 is standing for high/low of the port
+
+        self.zirkPort = {5: 1, 4: 2, 3: 4, 2: 8, 1: 16, 0: 32}  # {0: 1, 1: 2, 2: 4, 3: 8, 4: 16, 5: 32}
+        self.currentPort = None
+
+    def __enter__(self):
+        self.deviceInfo = DaqDeviceInfo(self.boardNum)
+        print("Connected to DAQ device!")
+        #self.ranges = self.deviceInfo.get_ao_info().supported_ranges  # For RedLab 3101
+        # print(self.deviceInfo.get_dio_info().port_info[0].is_port_configurable)
+        self.digitalPort = enums.DigitalPortType.FIRSTPORTA  # For 1208LS (Freq Umschalter)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        ul.d_out(self.boardNum, self.digitalPort, 0)
+
+    def VOut(self, channel, value):
+        ul.v_out(self.boardNum, channel, self.ranges[0], value)
+
+    def Dout(self, data: int):
+        if data != self.currentPort:
+            ul.d_config_port(self.boardNum, self.digitalPort, enums.DigitalIODirection.OUT)
+            ul.d_out(self.boardNum, self.digitalPort, data)
+            self.currentPort = data
+
+    def Dout_test(self, on: bool):
+        ul.d_config_port(self.boardNum, self.digitalPort, enums.DigitalIODirection.OUT)
+        for i in range(0, 6):
+            ul.d_out(self.boardNum, self.digitalPort, self.zirkPort[i])
+            time.sleep(1)
 
 class Keithley2000():
     def __init__(self, device:pyvisa.Resource):
@@ -41,6 +86,35 @@ class Keithley2000():
     def sense(self) -> float:
         return float(self.query('SENSE:DATA:FRESH?').split(",")[0][:-3])
 
+class FreqUmschalter():
+    def __init__(self, RedLabDigital:RedLabDigital):
+        self.device = RedLabDigital
+
+        # 8-18 GHz: Zirk 0
+        # 18-26 GHz: Zirk 1
+        # 27-31 GHz: Zirk 2
+        # 31-33 GHz: Zirk 3
+        # 33-37 GHz: Zirk 4
+        # 37-40 GHz: Zirk 5
+        self.freqRanges = {5: (8.0, 18.0),
+                           4: (18.0, 26.0),
+                           3: (27.0, 31.0),
+                           2: (31.0, 33.0),
+                           1: (33.0, 37.0),
+                           0: (37.0, 40.0)}
+
+    def setZirkulator(self, freq: float) -> bool:
+        # Checks whether freq is in any known range and excludes the rest as unsupported
+        # Returns a boolean, if freq was found in a range
+        if not (26.0 < freq < 27.0) and not (freq > 40.0) and not (freq < 8.0):
+            for key, range in self.freqRanges.items():
+                if (range[0] <= freq <= range[1]):
+                    #print("Switch Ports to:", key)
+                    self.device.Dout(self.device.zirkPort[key])
+                    return True
+        else:
+            print("Frequency not supported!:", freq, " GHz")
+            return False
 
 class FreqGenerator():
     def __init__(self, device:pyvisa.Resource):
