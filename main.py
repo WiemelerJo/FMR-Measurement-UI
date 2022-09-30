@@ -87,7 +87,7 @@ class MyForm(QMainWindow):
         self.Magnet = MagnetPowerRedLab(self.calibration) #MagnetPowerSupply(self.config["Magnet Powersupply"].get("address"))
         self.setField(0.0)
 
-    def changeMeasurementType(self, *args, **kwargs):
+    def changeMeasurementType(self):
         # Combobox index
         # 0: Field Sweep
         # 1: Frequency Sweep
@@ -96,6 +96,31 @@ class MyForm(QMainWindow):
         measType = self.ui.comboBox.currentIndex()
         self.ui.startbutton.pressed.connect(self.measurementTypes[measType])
 
+        self.ui.sampleAngleTo.setEnabled(False)
+        self.ui.sampleAngleFrom.setEnabled(False)
+        self.ui.spinBoxAngleStep.setEnabled(False)
+        self.ui.frequenciesTo.setEnabled(False)
+        self.ui.frequenciesFrom.setEnabled(False)
+        self.ui.spinBoxFreqStep.setEnabled(False)
+
+        if measType == 1:
+            # FreqSweep
+            self.ui.frequenciesTo.setEnabled(True)
+            self.ui.frequenciesFrom.setEnabled(True)
+            self.ui.spinBoxFreqStep.setEnabled(True)
+        elif measType == 2:
+            # Angdep
+            self.ui.sampleAngleTo.setEnabled(True)
+            self.ui.sampleAngleFrom.setEnabled(True)
+            self.ui.spinBoxAngleStep.setEnabled(True)
+        elif measType == 3:
+            # FreqAngdep
+            self.ui.sampleAngleTo.setEnabled(True)
+            self.ui.sampleAngleFrom.setEnabled(True)
+            self.ui.spinBoxAngleStep.setEnabled(True)
+            self.ui.frequenciesTo.setEnabled(True)
+            self.ui.frequenciesFrom.setEnabled(True)
+            self.ui.spinBoxFreqStep.setEnabled(True)
         #self.checkNeededDevices()
 
     def checkNeededDevices(self):
@@ -163,6 +188,7 @@ class MyForm(QMainWindow):
         self.infos["sweepDirection"] = self.sweepDirections[self.ui.comboBox_sweepDirection.currentIndex()]
         self.infos["MWFreq"] = 10 # GHz
         self.infos["MWPow"] = 13 # dBm
+        self.infos["FreqSweep"] = [] # List of driven Frequencies
 
     def measThreadTogglePause(self):
         if self.ui.pausebutton.text() == "Pause":
@@ -201,6 +227,7 @@ class MyForm(QMainWindow):
             self.setField(0.0)
 
     def startFreqSweep(self):
+
         return
 
     def startFieldAngDep(self):
