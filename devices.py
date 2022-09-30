@@ -1,4 +1,7 @@
 import pyvisa
+import math
+import numpy as np
+import time
 
 from scipy.interpolate import interp1d
 
@@ -7,6 +10,8 @@ from mcculw.device_info import DaqDeviceInfo
 
 import zhinst.utils
 import zhinst.core as ziPython
+
+from PyQt5.QtCore import pyqtSignal, QThread
 
 class RedLab:
     # The class is very focused on the usage of ME3101 as of usage in polariser and powersupply regultor
@@ -130,19 +135,40 @@ class Polariser:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.redbox.exit()
 
+class FieldMove(QThread):
+    def __init__(self, Magnet,calibration:interp1d, currentField:float, desiredField:float, maxFieldSpeed=25, channel:int=2):
+        super(FieldMove, self).__init__()
+        self.calib = calibration
+        self.channel = channel
+        self.curField = currentField
+        self.desField = desiredField
+        self.speed = maxFieldSpeed
+        self.Magnet = Magnet
+
+    def run(self):
+        steps = math.ceil( abs(self.curField - self.desField ) / self.speed )
+
+        for fieldStep in np.linspace(self.curField, self.desField , num=10 * steps + 1):
+            self.Magnet.setField(fieldStep/1000)
+            time.sleep(0.2)
 
 class MagnetPowerRedLab(RedLab):
-    def __init__(self, calibration:interp1d, channel=2):
+    def __init__(self, calibration:interp1d, channel:int=2):
         super(MagnetPowerRedLab, self).__init__()
         self.calib = calibration
 
     def setField(self, desiredField:float):
-        #volt = self.calib(desiredField)
-        volt = 7.99/0.509 * desiredField
-        if volt < 0:
-            volt = 0
+        print("Desired Field:",desiredField)
+        try:
+            volt = self.calib(desiredField)
+        except ValueError:
+            print("ERROR:", desiredField)
+            if volt <= 0:
+                volt = 0.0
+            elif volt >= 7.0:
+                volt = 7.0
 
-        print(volt, desiredField)
+        print("Volt:",volt, "WantedField:",desiredField)
         self.VOut(2, volt)
 
 class MagnetPowerSupply:

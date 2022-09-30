@@ -105,7 +105,7 @@ class MyForm(QMainWindow):
 
     def loadFieldCalibration(self):
         calib_raw = np.loadtxt("calibMagnet.dat")
-        self.calibration = interp1d(calib_raw[2], calib_raw[0]) # Volt(field)
+        self.calibration = interp1d(calib_raw[:,2], calib_raw[:,0]) # Volt(field)
         #print("Wrong calibration!!! Testing output for now!")
 
     def setFieldRange(self):
@@ -147,14 +147,7 @@ class MyForm(QMainWindow):
             self.fieldTimer.start()
 
     def isFieldMoving(self, val:bool):
-        # This function toggles the colour of the field value in the GUI, similar to the XEPR program
-
-        self.desiredField = val
-
-        # if mov:
-        #     self.ui.fieldlabel.setStyleSheet("background-color: red")
-        # elif not mov:
-        #     self.ui.fieldlabel.setStyleSheet("background-color: lime")
+        self.desiredField = val*1000
 
     def gatherInfos(self):
         print("---------------gatherInfos is not correctly implemented!---------------")
@@ -185,17 +178,12 @@ class MyForm(QMainWindow):
     def startFieldSweep(self):
         self.gatherInfos()
         self.measThread = SweepMeasurement(self.Magnet, self.TslMeter, self.FreqGen, self.LockIn, self.infos)
-        #self.thread = QThread(self)
-        #self.measThread.moveToThread(self.thread)
-        #self.thread.start()
 
         self.measThread.start()
         self.measThread.dataOutSig.connect(self.getSweepData)
         self.measThread.fieldMoveSig.connect(self.isFieldMoving)
         self.measThread.meterUsageSig.connect(self.toggleFieldTimer)
         self.measThread.errorSig.connect(self.errorMSG)
-        #self.measThread.startSig.connect()
-        #self.measThread.doneSig.connect()
 
         self.ui.progressBar.setMaximum(99)
 
@@ -211,7 +199,6 @@ class MyForm(QMainWindow):
             self.LockIn.outputOff()
             self.FreqGen.outputOff()
             self.setField(0.0)
-
 
     def startFreqSweep(self):
         return
@@ -285,36 +272,14 @@ class MyForm(QMainWindow):
         name = measType + "_" + now.strftime("%d-%m-%y_%H-%M-%S") + ".dat"
         self.outputFile = stack.enter_context(open(name, "x"))
 
-    def setField(self, val: float) -> float:
-        # This function changes the magnetic field to value "val" according to the calibration,
-        # then reads out the tesla meter and returns this value
-        # Output commands (termination character "\n"):
-        #         SOUR:VOL 0.0\n
-        #         SOUR:CUR 0.0\n
-        #         SOUR:CUR:NEG 0.0\n
-
-        #self.ui.fieldlabel.setStyleSheet("background-color: red")
-
-        # First get current field value and determine the distance to the next field step "val"
-        # if distance bigger than maximum field rate (default: 100 mT/s) safely change the field according to field rate
-
-        #self.field = self.getField()        # Read field value
-
-        # Amount of steps needed to safely reach desired field; math.ceil() rounds up to smallest bigger integer
-        steps = math.ceil(
-            abs( self.field - val ) / float( self.config["Magnet Powersupply"].get("Maximum field rate [mT/s]") ) )
-
-        for fieldStep in np.linspace(self.field, val, num=10*steps+1):
-            print(fieldStep)
-            self.Magnet.setField(fieldStep/1000)
-            time.sleep(0.2)
-
-        #self.ui.fieldlabel.setStyleSheet("background-color: lime")
+    def setField(self, val:float):
+        self.desiredField = val
+        self.fieldWorker = FieldMove(self.Magnet,self.calibration, self.field, val, channel=2)
+        self.fieldWorker.start()
 
     def changePolarisation(self, pol:str):
         # Change polaristaion of the field
         # To switch the polarisation the field must be at 0.0 -> powersupply in idle
-
         self.setField(0.0)
 
         if pol == "negative":

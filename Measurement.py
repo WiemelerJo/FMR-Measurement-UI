@@ -59,7 +59,8 @@ class SweepMeasurement(QThread):
                 print("Set field to:", fieldStep)
                 time.sleep(0.1)
 
-        setFieldSafe(self.sweepRange[0] / 1000)  # Safely move field to start val
+        setFieldSafe(self.sweepRange[0])  # Safely move field to start val
+        time.sleep(3)
         try:
             self.meterUsageSig.emit(True)
             #self.fieldMoveSig.emit(True)
