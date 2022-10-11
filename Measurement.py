@@ -205,6 +205,7 @@ class FreqSweepMeasurement(QThread):
         self.stepSize = float(infos.get("stepSize"))
         self.TC = float(infos.get("TC"))
         self.ModFreq = float(infos.get("ModFreq"))
+        self.ModAmp = float(infos.get("ModAmp"))
         self.avrg = int(infos.get("avrg"))
         self.maxFieldSpeed = float(infos.get("maxFieldSpeed"))
         self.calib = infos.get("calibration")
@@ -236,7 +237,7 @@ class FreqSweepMeasurement(QThread):
                 time.sleep(0.1)
 
         setFieldSafe(self.sweepRange[0])  # Safely move field to start val
-        time.sleep(3)
+        time.sleep(5) # Settling time of the magnet
 
         try:
             self.meterUsageSig.emit(True)
@@ -244,11 +245,18 @@ class FreqSweepMeasurement(QThread):
 
             self.LockIn.TC = self.TC
             self.LockIn.modFreq = self.ModFreq
+            self.LockIn.modAmp = self.ModAmp
             self.LockIn.outputOn()
 
             self.FreqGen.outputOn()
 
             freqDataOut = {}
+
+            # Set phase to Zero, will set Phase and Y-channel to zero
+            self.LockIn.daq.setDouble('/dev280/demods/0/phaseshift', 0)
+            time.sleep(7*self.TC)
+            phase = self.LockIn.getTheta()
+            self.LockIn.daq.setDouble('/dev280/demods/0/phaseshift', phase)
 
             for freq, pow in self.fSweepRange:
                 self.FreqGen.setFreq(freq)

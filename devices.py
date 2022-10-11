@@ -5,7 +5,7 @@ import time
 
 from scipy.interpolate import interp1d
 
-from mcculw import ul
+from mcculw import ul, enums
 from mcculw.device_info import DaqDeviceInfo
 
 import zhinst.utils
@@ -87,25 +87,25 @@ class Keithley2000():
         return float(self.query('SENSE:DATA:FRESH?').split(",")[0][:-3])
 
 class FreqUmschalter():
-    def __init__(self, RedLabDigital:RedLabDigital):
+    def __init__(self, RedLabDigital: RedLab):
         self.device = RedLabDigital
 
         # 8-18 GHz: Zirk 0
         # 18-26 GHz: Zirk 1
+        # gap! between 26 - 27 GHz!
         # 27-31 GHz: Zirk 2
         # 31-33 GHz: Zirk 3
         # 33-37 GHz: Zirk 4
         # 37-40 GHz: Zirk 5
-        self.freqRanges = {5: (8.0, 18.0),
-                           4: (18.0, 26.0),
-                           3: (27.0, 31.0),
-                           2: (31.0, 33.0),
-                           1: (33.0, 37.0),
-                           0: (37.0, 40.0)}
+        self.freqRanges = {0: (8.0, 18.0),
+                           1: (18.0, 26.0),
+                           2: (27.0, 31.0),
+                           3: (31.0, 33.0),
+                           4: (33.0, 37.0),
+                           5: (37.0, 40.0)}
 
     def setZirkulator(self, freq: float) -> bool:
-        # Checks whether freq is in any known range and excludes the rest as unsupported
-        # Returns a boolean, if freq was found in a range
+
         if not (26.0 < freq < 27.0) and not (freq > 40.0) and not (freq < 8.0):
             for key, range in self.freqRanges.items():
                 if (range[0] <= freq <= range[1]):
@@ -340,8 +340,8 @@ class LockIn_Zurich:
         daq.subscribe('/dev280/demods/0/sample') # subscribe to output
         daq.setDouble('/dev280/oscs/0/freq', 3000) # Set modulation frequency
         daq.setInt('/dev280/sigouts/0/on', 0) # Toggle output off
-        daq.setDouble('/dev280/sigouts/0/amplitudes/6', 0.5) # Set modulation amp to 5V peak to peak
-        daq.setInt('/dev280/demods/0/order', 3) # Set low pass filter bandpass to 8th order
+        daq.setDouble('/dev280/sigouts/0/amplitudes/6', 0.5) # Set modulation amp to 5V peak to peak.
+        daq.setInt('/dev280/demods/0/order', 3) # Set low pass filter bandpass to 3th order
         daq.setInt('/dev280/demods/0/sinc', 1) # Activate Sinc filtering
         daq.setInt('/dev280/sigins/0/diff', 0) # Switch differential measurement off
         daq.setInt('/dev280/sigins/0/imp50', 1) # Switch On 50 Ohm input
@@ -369,8 +369,28 @@ class LockIn_Zurich:
 
     @modFreq.setter
     def modFreq(self, val:float):
+        if val > 450000:
+            self.daq.setInt('/dev280/demods/0/sinc', 0)  # Activate Sinc filtering
         self.daq.setDouble('/dev280/oscs/0/freq', val)  # Set modulation frequency
         self._modFreq = val
+
+    @property
+    def modAmp(self):
+        return self._modAmp
+
+    @modAmp.setter
+    def modAmp(self, val: float):
+        daq.setDouble('/dev280/sigouts/0/amplitudes/6', val)  # Set modulation amplitude
+        self._modAmp = val
+
+    @property
+    def range(self):
+        return self._range
+
+    @range.setter
+    def range(self, val: float):
+        daq.setDouble('/dev280/sigouts/0/amplitudes/6', val)  # Set input range
+        self._range = val
 
     def outputOff(self):
         self.daq.setInt('/dev280/sigouts/0/on', 0)

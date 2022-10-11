@@ -81,6 +81,8 @@ class MyForm(QMainWindow):
         #self.LockIn = LockIn_SR830(stack.enter_context(rm.open_resource('GPIB0::8::INSTR')))
 
         self.FreqGen = FreqGenerator(stack.enter_context(rm.open_resource(self.config["R&S-Frequency Generator"].get("address"))))
+        self.Umschalter = FreqUmschalter(stack.enter_context(RedLabDigital(1)))
+        self.Umschalter.setZirkulator(15.0)
         #self.Kthly = Keithley2000(stack.enter_context(rm.open_resource(self.config["Keithley 2000"].get("address"))))
 
         self.LockIn = LockIn_Zurich()
@@ -183,12 +185,14 @@ class MyForm(QMainWindow):
         print("TimeConstant" ,float(self.ui.spinBoxTC.value()))
         self.infos["TC"] = float(self.ui.spinBoxTC.value())
         self.infos["ModFreq"] = float(self.ui.spinBoxModFreq.value())
+        self.infos["ModAmp"] = float(self.ui.spinBoxModAmp.value())/10 # Peak to Peak amplitude in V
         self.infos["avrg"] = 1
         self.infos["maxFieldSpeed"] = self.config["Magnet Powersupply"].get("Maximum field rate [mT/s]")
         self.infos["calibration"] = self.calibration
         self.infos["sweepDirection"] = self.sweepDirections[self.ui.comboBox_sweepDirection.currentIndex()]
-        self.infos["MWFreq"] = 10 # GHz
-        self.infos["MWPow"] = 13 # dBm
+        self.infos["MWFreq"] = float(self.ui.lineEditCWFreq.text())# GHz
+        self.infos["MWPow"] = float(self.ui.lineEditCWPower.text()) # dBm
+        self.infos["InputRange"] = float(self.ui.spinBoxInputRange.value())
 
 
         self.infos["FreqSweep"] = [] # List of driven Frequencies
