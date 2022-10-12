@@ -83,6 +83,10 @@ class EqualiseWorker(QThread):
         power = 1.0 # in dB
         voltTreshold = 0.05 # in V
 
+        y0 = self.Kthly.sense()
+
+        self.FreqGen.outputOn()
+
         try:
             if self.Umschalter is not None:
                 zirkulators = self.Umschalter.freqRanges
@@ -106,15 +110,16 @@ class EqualiseWorker(QThread):
 
                     m = (b-a) / ((power+stepWidth) - power)
 
-                    power = self.wantedVolt / m
+                    power = (self.wantedVolt - y0) / m
                     self.FreqGen.setPower(power)
                     volt = self.Kthly.sense()
                     print("Power:",power, "Voltage:",volt)
 
                 self.dataSig.emit([freq, power])
                 power = 1.0
-
+            self.FreqGen.outputOff()
         except Exception as e:
+            self.FreqGen.outputOff()
             self.errorSig.emit(e)
 
 
