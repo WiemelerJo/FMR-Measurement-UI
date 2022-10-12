@@ -7,7 +7,7 @@ import pyqtgraph as pg
 from typing import List
 from datetime import datetime
 from configparser import ConfigParser
-from devices import Keithley2000, FreqGenerator
+from devices import Keithley2000, FreqGenerator, FreqUmschalter, RedLabDigital
 from DiodeUI import *
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal
@@ -15,10 +15,10 @@ from PyQt5.QtCore import QTimer, QThread, pyqtSignal
 from contextlib import ExitStack
 
 class Worker(QThread):
-    dataSig = pyqtSignal(List[float, float])
+    dataSig = pyqtSignal(list)
     errorSig = pyqtSignal(str)
 
-    def __init__(self, Kthly:Keithley2000, FreqGen:FreqGenerator, freqRange:np.array, Umschalter=None, timeout=0.15):
+    def __init__(self, Kthly:Keithley2000, FreqGen:FreqGenerator, freqRange:np.array, Umschalter:FreqUmschalter=None, timeout=0.05):
         super(Worker, self).__init__()
 
         self.Kthly = Kthly
@@ -26,18 +26,29 @@ class Worker(QThread):
         self.Umschalter = Umschalter
 
         self.freqRange = freqRange
-        self.timeout = 0.15
+        self.timeout = timeout
 
     def run(self) -> None:
         try:
+            if self.Umschalter is not None:
+                zirkulators = self.Umschalter.freqRanges
+
+            self.FreqGen.outputOn()
             for freq in self.freqRange:
+                if self.Umschalter is not None:
+                    if not (26.0 < freq < 27.0) and not (freq > 40.0) and not (freq < 8.0):
+                        for key, range in zirkulators.items():
+                            if (range[0] <= freq <= range[1]):
+                                self.Umschalter.setZirkulator(freq)
                 self.FreqGen.setFreq(freq)
                 time.sleep(self.timeout)
                 val = self.Kthly.sense()
 
                 data = [float(freq), float(val)]
                 self.dataSig.emit(data)
+            self.FreqGen.outputOff()
         except Exception as e:
+            self.FreqGen.outputOff()
             self.errorSig.emit(e)
 
 
@@ -73,15 +84,20 @@ class MyForm(QMainWindow):
         self.freqRange = np.arange(self.fMin, self.fMax, self.fStep)
         self.FreqGen.setPower(self.fPow)  # in dBm
 
+        self.Umschalter = None
+        self.useUmschalter = self.ui.checkBoxUmschalter.isChecked()
+        if self.useUmschalter:
+            self.Umschalter = FreqUmschalter(stack.enter_context(RedLabDigital(1)))
+
         try:
             self.outputFile.close()
         except:
             pass
         now = datetime.now()
-        name = FrequenzListe + "_" + now.strftime("%d-%m-%y_%H-%M-%S") + ".dat"
+        name = "FrequenzListe" + "_" + now.strftime("%d-%m-%y_%H-%M-%S") + ".dat"
         self.outputFile = stack.enter_context(open(name, "x"))
 
-        self.thread = Worker(self.Kthly, self.FreqGen, self.freqRange)
+        self.thread = Worker(self.Kthly, self.FreqGen, self.freqRange, self.Umschalter)
         self.thread.start()
         self.thread.dataSig.connect(self.updateData)
         self.thread.errorSig.connect(self.errorSignal)

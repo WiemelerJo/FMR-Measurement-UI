@@ -53,6 +53,7 @@ class RedLabDigital:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        ul.d_config_port(self.boardNum, self.digitalPort, enums.DigitalIODirection.OUT)
         ul.d_out(self.boardNum, self.digitalPort, 0)
 
     def VOut(self, channel, value):
