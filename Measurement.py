@@ -73,6 +73,12 @@ class SweepMeasurement(QThread):
             self.FreqGen.setPower(self.MWPow)
             self.FreqGen.outputOn()
 
+            # Set phase to Zero, will set Phase and Y-channel to zero
+            self.LockIn.daq.setDouble('/dev280/demods/0/phaseshift', 0)
+            time.sleep(7 * self.TC)
+            phase = self.LockIn.getTheta()
+            self.LockIn.daq.setDouble('/dev280/demods/0/phaseshift', phase)
+
             dataOut = {}
             for fieldStep in self.sweepRange:
                 if self.pause:

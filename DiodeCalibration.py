@@ -11,7 +11,7 @@ from datetime import datetime
 from configparser import ConfigParser
 from devices import Keithley2000, FreqGenerator, FreqUmschalter, RedLabDigital
 from DiodeUI import *
-from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal
 
 from contextlib import ExitStack
@@ -59,6 +59,7 @@ class EqualiseWorker(QThread):
     # Creating Freq to dB calibration
     dataSig = pyqtSignal(list)
     errorSig = pyqtSignal(str)
+    debugSig = pyqtSignal(str)
 
     def __init__(self, Kthly:Keithley2000, FreqGen:FreqGenerator, freqRange:np.array, Umschalter:FreqUmschalter=None, timeout=0.05):
         super(EqualiseWorker, self).__init__()
@@ -79,9 +80,9 @@ class EqualiseWorker(QThread):
         # Because the output voltage is proportional to the input power in a sqrt law,
         # this calculation needs some iterations till convergence
 
-        stepWidth = 1.0 # in dB
+        stepWidth = 3.0 # in dB
         power = 1.0 # in dB
-        voltTreshold = 0.05 # in V
+        voltTreshold = 0.005 # in V
 
         y0 = self.Kthly.sense()
 
@@ -99,18 +100,23 @@ class EqualiseWorker(QThread):
                                 self.Umschalter.setZirkulator(freq)
 
                 self.FreqGen.setFreq(freq)
-                self.FreqGen.setPower(power)
+                self.FreqGen.setPower(1.0)
                 volt = self.Kthly.sense()
 
                 while not self.wantedVolt - voltTreshold < volt < self.wantedVolt + voltTreshold:
+                    volt = self.Kthly.sense()
                     a = volt
 
                     self.FreqGen.setPower(power + stepWidth)
+                    time.sleep(0.2)
                     b = self.Kthly.sense()
 
                     m = (b-a) / ((power+stepWidth) - power)
+                    self.debugSig.emit(str(m))
 
                     power = (self.wantedVolt - y0) / m
+                    if power > 17.0:
+                        power = 17.0
                     self.FreqGen.setPower(power)
                     volt = self.Kthly.sense()
                     print("Power:",power, "Voltage:",volt)
@@ -120,7 +126,7 @@ class EqualiseWorker(QThread):
             self.FreqGen.outputOff()
         except Exception as e:
             self.FreqGen.outputOff()
-            self.errorSig.emit(e)
+            self.errorSig.emit(str(e))
 
 
 class MyForm(QMainWindow):
@@ -130,51 +136,68 @@ class MyForm(QMainWindow):
         self.ui.setupUi(self)
 
         self.ui.pushButtonStart.pressed.connect(self.startCalibration)
+        self.ui.pushButtonLoad.pressed.connect(self.loadListe)
         self.Kthly = Keithley2000(stack.enter_context(rm.open_resource(kthlyAddr)))
         self.FreqGen = FreqGenerator(stack.enter_context(rm.open_resource(RSFreq)))
 
         self.FreqGen.outputOff()
 
         self.plot = self.ui.graphicsView.plt.plot()
+        self.listLoaded = False
+
+
+    def loadListe(self) -> None:
+        fname = QFileDialog.getOpenFileName(self, 'Open file', '/home')
+        if fname[0]:
+            self.now = datetime.now().strftime("%d-%m-%y_%H-%M-%S") + ".dat"
+            D = np.loadtxt(fname[0])
+            self.xData = D[:, 0]
+            self.yData = D[:, 1]
+            self.plot.setData(self.xData, self.yData)
+
+            self.listLoaded = True
 
     def startCalibration(self) -> None:
-        self.xData = []
-        self.yData = []
+        if not self.listLoaded:
+            self.xData = []
+            self.yData = []
 
-        self.fMin = float(self.ui.spinBoxFrom.value())
-        self.fMax = float(self.ui.spinBoxTo.value())
-        self.fStep = float(self.ui.spinBoxStep.value())
-        self.fPow = float(self.ui.spinBoxPower.value())
+            self.fMin = float(self.ui.spinBoxFrom.value())
+            self.fMax = float(self.ui.spinBoxTo.value())
+            self.fStep = float(self.ui.spinBoxStep.value())
+            self.fPow = float(self.ui.spinBoxPower.value())
 
-        if self.fMin > self.fMax:
-            raise ValueError("Minimum frequency is higher than maximum frequency")
-        if self.fStep > self.fMax:
-            raise ValueError("Frequency step width is too big")
+            if self.fMin > self.fMax:
+                raise ValueError("Minimum frequency is higher than maximum frequency")
+            if self.fStep > self.fMax:
+                raise ValueError("Frequency step width is too big")
 
-        if self.ui.checkBoxUmschalter.isChecked():
-            print("Implement Umschalter idiot!")
+            if self.ui.checkBoxUmschalter.isChecked():
+                print("Implement Umschalter idiot!")
 
-        self.freqRange = np.arange(self.fMin, self.fMax, self.fStep)
-        self.FreqGen.setPower(self.fPow)  # in dBm
+            self.freqRange = np.arange(self.fMin, self.fMax, self.fStep)
+            self.FreqGen.setPower(self.fPow)  # in dBm
 
-        self.Umschalter = None
-        self.useUmschalter = self.ui.checkBoxUmschalter.isChecked()
-        if self.useUmschalter:
-            self.Umschalter = FreqUmschalter(stack.enter_context(RedLabDigital(1)))
+            self.Umschalter = None
+            self.useUmschalter = self.ui.checkBoxUmschalter.isChecked()
+            if self.useUmschalter:
+                self.Umschalter = FreqUmschalter(stack.enter_context(RedLabDigital(1)))
 
-        try:
-            self.outputFile.close()
-        except:
-            pass
-        self.now = datetime.now()
-        name = "FrequenzListe" + "_" + self.now.strftime("%d-%m-%y_%H-%M-%S") + ".dat"
-        self.outputFile = stack.enter_context(open(name, "x"))
+            try:
+                self.outputFile.close()
+            except:
+                pass
+            self.now = datetime.now()
+            name = "FrequenzListe" + "_" + self.now.strftime("%d-%m-%y_%H-%M-%S") + ".dat"
+            self.outputFile = stack.enter_context(open(name, "x"))
 
-        self.thread = Worker(self.Kthly, self.FreqGen, self.freqRange, self.Umschalter)
-        self.thread.start()
-        self.thread.dataSig.connect(self.updateData)
-        self.thread.errorSig.connect(self.errorSignal)
-        self.thread.finished.connect(self.voltageScanDone)
+            self.thread = Worker(self.Kthly, self.FreqGen, self.freqRange, self.Umschalter)
+            self.thread.start()
+            self.thread.dataSig.connect(self.updateData)
+            self.thread.errorSig.connect(self.errorSignal)
+            self.thread.finished.connect(self.voltageScanDone)
+        else:
+            self.voltageScanDone()
 
     def voltageScanDone(self):
         # This function is called if Worker is finished
@@ -184,23 +207,38 @@ class MyForm(QMainWindow):
             self.outputFile.close()
         except:
             pass
-        name_EQ = "FrequenzListe_dB" + "_" + self.now.strftime("%d-%m-%y_%H-%M-%S") + ".dat"
-        name_Maxima = "FrequenzListe_Maxima" + "_" + self.now.strftime("%d-%m-%y_%H-%M-%S") + ".dat"
+
+        if self.listLoaded:
+            name_EQ = "FrequenzListe_dB" + "_" + self.now
+            name_Maxima = "FrequenzListe_Maxima" + "_" + self.now
+        else:
+            name_EQ = "FrequenzListe_dB" + "_" + self.now.strftime("%d-%m-%y_%H-%M-%S") + ".dat"
+            name_Maxima = "FrequenzListe_Maxima" + "_" + self.now.strftime("%d-%m-%y_%H-%M-%S") + ".dat"
         self.outputFile = stack.enter_context(open(name_EQ, "x"))
 
         self.eqXdata = []
         self.eqYdata = []
 
-        findMax = argrelextrema(volt, np.greater, axis=0, order=8)
+        findMax = argrelextrema(self.yData, np.greater, axis=0, order=8)
         self.maximaFreq = self.xData[findMax]
         self.maximaVolt = self.yData[findMax]
 
         np.savetxt(name_Maxima, np.array([self.maximaFreq, self.maximaFreq]).flatten().transpose())
 
-        self.eqThread = EqualiseWorker(self.Kthly, self.FreqGen, self.freqRange, self.Umschalter)
+        self.Umschalter = None
+        self.useUmschalter = self.ui.checkBoxUmschalter.isChecked()
+        if self.useUmschalter:
+            self.Umschalter = FreqUmschalter(stack.enter_context(RedLabDigital(1)))
+
+        self.eqThread = EqualiseWorker(self.Kthly, self.FreqGen, self.maximaFreq, self.Umschalter)
         self.eqThread.start()
         self.eqThread.dataSig.connect(self.updateEQdata)
         self.eqThread.errorSig.connect(self.errorSignal)
+        self.eqThread.debugSig.connect(self.debug)
+
+    def debug(self, *args):
+        print(args)
+
 
     def updateEQdata(self, data:list):
         self.eqXdata.append(data[0])
