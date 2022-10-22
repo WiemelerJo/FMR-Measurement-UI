@@ -119,7 +119,7 @@ class EqualiseWorker(QThread):
                         P = m.sqrt(self.wantedVolt / a)
                     except Exception as e:
                         self.errorSig.emit(e)
-                        P = 3.0 # Change initial condition for the case of negative a
+                        P = 3.0 # Change initial condition for the case of positive a
                     power = P
 
                     #m = (V-Vstart) / ((power+stepWidth) - power)
