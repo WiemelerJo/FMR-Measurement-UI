@@ -3,6 +3,7 @@ import time
 import pyvisa
 import sys
 import pyqtgraph as pg
+import math as m
 
 from scipy.signal import argrelextrema
 
@@ -105,16 +106,26 @@ class EqualiseWorker(QThread):
 
                 while not self.wantedVolt - voltTreshold < volt < self.wantedVolt + voltTreshold:
                     volt = self.Kthly.sense()
-                    a = volt
+                    Vstart = volt
 
                     self.FreqGen.setPower(power + stepWidth)
                     time.sleep(0.2)
-                    b = self.Kthly.sense()
+                    V = self.Kthly.sense()
 
-                    m = (b-a) / ((power+stepWidth) - power)
-                    self.debugSig.emit(str(m))
+                    dV = V - Vstart
+                    dP = stepWidth
+                    a = dV / (2 * dP)
+                    try:
+                        P = m.sqrt(self.wantedVolt / a)
+                    except Exception as e:
+                        self.errorSig.emit(e)
+                        P = 3.0 # Change initial condition for the case of negative a
+                    power = P
 
-                    power = (self.wantedVolt - y0) / m
+                    #m = (V-Vstart) / ((power+stepWidth) - power)
+                    #self.debugSig.emit(str(m))
+                    #power = (self.wantedVolt - y0) / m
+
                     if power > 17.0:
                         power = 17.0
                     self.FreqGen.setPower(power)
