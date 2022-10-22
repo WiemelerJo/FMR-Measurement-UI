@@ -127,7 +127,7 @@ class EqualiseWorker(QThread):
                     #power = (self.wantedVolt - y0) / m
 
                     if power > 17.0:
-                        power = 17.0
+                        power = 2.0 # reset
                     self.FreqGen.setPower(power)
                     volt = self.Kthly.sense()
                     print("Power:",power, "Voltage:",volt)
