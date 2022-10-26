@@ -76,6 +76,8 @@ class MyForm(QMainWindow):
         self.config = config
         self.loadFieldCalibration()
 
+        self.ExcelWriter = stack.enter_context(ExcelWriter(self.ui.tableViewExcel, 'LogBook.xlsx'))
+
         self.TslMeter = HallSensor(stack.enter_context(rm.open_resource(self.config["Hall Sensor"].get("address"))))
         #self.RedLab = RedLab()
         #self.LockIn = LockIn_SR830(stack.enter_context(rm.open_resource('GPIB0::8::INSTR')))

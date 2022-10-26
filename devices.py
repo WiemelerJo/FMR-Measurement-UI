@@ -13,18 +13,20 @@ import zhinst.utils
 import zhinst.core as ziPython
 
 from PyQt5.QtCore import pyqtSignal, QThread
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QAbstractScrollArea
 
 
-class ExcelWriter(QWidget):
-    #def __init__(self, xlsxPath:str, infos:dict):
+class ExcelWriter(QTableWidget):
+    def __init__(self, parent, xlsxPath:str):
+        super(ExcelWriter, self).__init__()
+        self.setParent(parent)
+        # layout = QVBoxLayout()
+        # self.setLayout(layout)
 
-    def __enter__(self, xlsxPath:str, infos:dict):
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-
-        self.table = QTableWidget()
-        layout.addWidget(self.table)
+        # self.table = QTableWidget()
+        # self.layout.addWidget(self.table)
+        self.horizontalHeader().setStretchLastSection(True)
+        self.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
 
         self.excelItems = ['measName', 'FilenName', 'Sample', 'Frequency', 'Power', 'Field', 'ModFreq', 'ModAmp', 'TC',
                            'Calib', 'Notes', 'Short', 'VNA', 'Steps']
@@ -37,12 +39,15 @@ class ExcelWriter(QWidget):
             self.df = pd.DataFrame()
             self.df.to_excel(xlsxPath, 'Tabelle1', index=False)
 
-        self.loadExcelData()
+        self.loadExcelData(xlsxPath, 'Tabelle1')
+        self.path = xlsxPath
+        self.sheet = 'Tabelle1'
 
+    def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.saveExcelData()
+        self.saveExcelData(self.path, self.sheet)
 
     def loadExcelData(self, excel_file_dir, worksheet_name):
         self.df = pd.read_excel(excel_file_dir, worksheet_name)
@@ -50,9 +55,9 @@ class ExcelWriter(QWidget):
             return
 
         self.df.fillna('', inplace=True)
-        self.table.setRowCount(self.df.shape[0])
-        self.table.setColumnCount(self.df.shape[1])
-        self.table.setHorizontalHeaderLabels(self.df.columns)
+        self.setRowCount(self.df.shape[0])
+        self.setColumnCount(self.df.shape[1])
+        self.setHorizontalHeaderLabels(self.df.columns)
 
 
         # returns pandas array object
@@ -62,9 +67,9 @@ class ExcelWriter(QWidget):
                 if isinstance(value, (float, int)):
                     value = '{0:0,.0f}'.format(value)
                 tableItem = QTableWidgetItem(str(value))
-                self.table.setItem(row[0], col_index, tableItem)
+                self.setItem(row[0], col_index, tableItem)
 
-        #self.table.setColumnWidth(2, 300)
+        # self.setColumnWidth(2, 300)
 
     def gatherInfos(self):
         self.infos = {}
@@ -88,7 +93,7 @@ class ExcelWriter(QWidget):
         self.gatherInfos() # Get infos
 
         #Add new row to table
-        row = self.table.rowCount()+1
+        row = self.rowCount()+1
         self.table.setRowCount(row)
 
         # Fill new row and add new row to df
@@ -96,7 +101,7 @@ class ExcelWriter(QWidget):
         for colIndex, excelColumn in enumerate(self.excelItems):
             tableItem = QTableWidgetItem().setText(str(self.infos.get(excelColumn)))
             infos[self.df.columns[colIndex]] = str(self.infos.get(excelColumn))
-            self.table.setItem(row, colIndex, tableItem)
+            self.setItem(row, colIndex, tableItem)
 
         infos = pd.DataFrame(infos, columns=infos.keys(), index=[0])
         self.df = pd.concat([self.df, infos])
