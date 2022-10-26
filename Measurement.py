@@ -65,7 +65,7 @@ class SweepMeasurement(QThread):
         try:
             self.meterUsageSig.emit(True)
             self.fieldMoveSig.emit(True)
-            # fMin = 500  # Hz
+            # fMin = 100  # Hz
             # fMax = 20000  # Hz
             # fStep = 100
             # modFreqs = np.arange(fMin, fMax + fStep, fStep)

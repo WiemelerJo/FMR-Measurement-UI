@@ -361,6 +361,10 @@ class MyForm(QMainWindow):
     def setDefaultConfig(self):
         # Reset config file to default; also used for debugging
         config = ConfigParser()
+        config["Backup-Path"] = {
+            "path" : r"C:\Users\Testnutzer\PycharmProjects\FMR-Measurement-UI\Measurements"
+        }
+
         config["Magnet Powersupply"] = {
             "address": 1,
             "Voltage Limit [V]": 230,
