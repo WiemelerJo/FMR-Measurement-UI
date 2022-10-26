@@ -338,7 +338,7 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="measurementdock">
+  <widget class="QDockWidget" name="logBookDock">
    <property name="floating">
     <bool>false</bool>
    </property>
@@ -349,10 +349,14 @@
     <string>Measurement View</string>
    </property>
    <attribute name="dockWidgetArea">
-    <number>2</number>
+    <number>4</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_4">
-    <layout class="QFormLayout" name="formLayout_3"/>
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="0" column="0">
+      <widget class="ExcelWriter" name="widget" native="true"/>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="magnetfieldock">
@@ -612,7 +616,7 @@
     <string>OPEN NEW WINDOW TO SELECT EITHER VNA OR LOCK-IN</string>
    </property>
   </action>
-  <zorder>measurementdock</zorder>
+  <zorder>logBookDock</zorder>
   <zorder>magnetfieldock</zorder>
   <zorder>measurementSettingsdock</zorder>
  </widget>
@@ -626,6 +630,12 @@
    <class>SpinBox_custom</class>
    <extends>QDoubleSpinBox</extends>
    <header>customwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>ExcelWriter</class>
+   <extends>QWidget</extends>
+   <header>devices</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
