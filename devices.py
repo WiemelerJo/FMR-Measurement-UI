@@ -42,7 +42,7 @@ class ExcelWriter(QWidget):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.df.to_excel(xlsxPath, 'Tabelle1', index=False)
+        self.saveExcelData()
 
     def loadExcelData(self, excel_file_dir, worksheet_name):
         self.df = pd.read_excel(excel_file_dir, worksheet_name)
