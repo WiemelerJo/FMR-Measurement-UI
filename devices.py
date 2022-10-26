@@ -381,7 +381,13 @@ class LockIn_Zurich:
 
     @modAmp.setter
     def modAmp(self, val: float):
-        daq.setDouble('/dev280/sigouts/0/amplitudes/6', val)  # Set modulation amplitude
+        if val <= 1:
+            self.daq.setDouble('/dev280/sigouts/0/range', 1)
+            self.daq.setDouble('/dev280/sigouts/0/amplitudes/6', val)  # Set modulation amplitude
+        elif val > 1:
+            self.daq.setDouble('/dev280/sigouts/0/range', 10)
+            self.daq.setDouble('/dev280/sigouts/0/amplitudes/6', val/10)  # Set modulation amplitude
+
         self._modAmp = val
 
     @property

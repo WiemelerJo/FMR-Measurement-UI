@@ -185,7 +185,7 @@ class MyForm(QMainWindow):
         print("TimeConstant" ,float(self.ui.spinBoxTC.value()))
         self.infos["TC"] = float(self.ui.spinBoxTC.value())
         self.infos["ModFreq"] = float(self.ui.spinBoxModFreq.value())
-        self.infos["ModAmp"] = float(self.ui.spinBoxModAmp.value())/10 # Peak to Peak amplitude in V
+        self.infos["ModAmp"] = float(self.ui.spinBoxModAmp.value()) # Peak to Peak amplitude in V
         self.infos["avrg"] = 1
         self.infos["maxFieldSpeed"] = self.config["Magnet Powersupply"].get("Maximum field rate [mT/s]")
         self.infos["calibration"] = self.calibration
@@ -193,7 +193,6 @@ class MyForm(QMainWindow):
         self.infos["MWFreq"] = float(self.ui.lineEditCWFreq.text())# GHz
         self.infos["MWPow"] = float(self.ui.lineEditCWPower.text()) # dBm
         self.infos["InputRange"] = float(self.ui.spinBoxInputRange.value())
-
 
         self.infos["FreqSweep"] = [] # List of driven Frequencies
 
@@ -216,6 +215,7 @@ class MyForm(QMainWindow):
         self.measThread.dataOutSig.connect(self.getSweepData)
         self.measThread.fieldMoveSig.connect(self.isFieldMoving)
         self.measThread.meterUsageSig.connect(self.toggleFieldTimer)
+        self.measThread.finished.connect(self.closeOutPutFile)
         self.measThread.errorSig.connect(self.errorMSG)
 
         self.ui.progressBar.setMaximum(99)
@@ -223,6 +223,9 @@ class MyForm(QMainWindow):
         self.newDataFile("FieldSweep")
         self.outputFile.write("Magnetic Field [T]\tX-Channel\tY-Channel\tPhase\n")
         self.clearPlotData()
+
+    def closeOutPutFile(self):
+        self.outputFile.close()
 
     def stopThread(self):
         if self.measThread.isRunning():
