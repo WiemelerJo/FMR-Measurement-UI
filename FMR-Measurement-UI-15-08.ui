@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1010</width>
-    <height>561</height>
+    <height>612</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -591,16 +591,46 @@
    <widget class="QWidget" name="dockWidgetContents_4">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QTableView" name="tableViewExcel">
+      <widget class="QTableWidget" name="tableWidgetExcel">
        <property name="sizeAdjustPolicy">
         <enum>QAbstractScrollArea::AdjustToContents</enum>
        </property>
-       <attribute name="horizontalHeaderVisible">
-        <bool>false</bool>
+       <property name="rowCount">
+        <number>10</number>
+       </property>
+       <property name="columnCount">
+        <number>14</number>
+       </property>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>68</number>
        </attribute>
-       <attribute name="horizontalHeaderStretchLastSection">
-        <bool>true</bool>
+       <attribute name="horizontalHeaderMinimumSectionSize">
+        <number>1</number>
        </attribute>
+       <row/>
+       <row/>
+       <row/>
+       <row/>
+       <row/>
+       <row/>
+       <row/>
+       <row/>
+       <row/>
+       <row/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
       </widget>
      </item>
     </layout>

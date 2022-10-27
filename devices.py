@@ -13,22 +13,21 @@ import zhinst.utils
 import zhinst.core as ziPython
 
 from PyQt5.QtCore import pyqtSignal, QThread
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QAbstractScrollArea
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QAbstractScrollArea, QScrollBar
 
 
-class ExcelWriter(QTableWidget):
-    def __init__(self, parent, xlsxPath:str):
-        super(ExcelWriter, self).__init__()
-        self.setParent(parent)
+class ExcelWriter:
+    def __init__(self, parent:QTableWidget, xlsxPath:str):
+        self.table = parent
         # layout = QVBoxLayout()
         # self.setLayout(layout)
 
         # self.table = QTableWidget()
         # self.layout.addWidget(self.table)
-        self.horizontalHeader().setStretchLastSection(True)
-        self.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        #self.horizontalHeader().setStretchLastSection(True)
+        #self.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
 
-        self.excelItems = ['measName', 'FilenName', 'Sample', 'Frequency', 'Power', 'Field', 'ModFreq', 'ModAmp', 'TC',
+        self.excelItems = ['Name', 'FName', 'Sample', 'Freq', 'Power', 'Field', 'ModFreq', 'ModAmp', 'TC',
                            'Calib', 'Notes', 'Short', 'VNA', 'Steps']
         try:
             self.df = pd.read_excel(xlsxPath, 'Tabelle1')
@@ -49,16 +48,29 @@ class ExcelWriter(QTableWidget):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.saveExcelData(self.path, self.sheet)
 
+    def tableToDF(self):
+        preDict = {}
+        for col, key in enumerate(self.excelItems):
+            vals = []
+            for row in range(self.table.rowCount()):
+                item = self.table.item(row, col)
+                if item == None:
+                    vals.append("/")
+                else:
+                    vals.append(self.table.item(row, col).text())
+            preDict[key] = vals
+
+        self.df = pd.DataFrame().from_dict(preDict)
+
     def loadExcelData(self, excel_file_dir, worksheet_name):
         self.df = pd.read_excel(excel_file_dir, worksheet_name)
         if self.df.size == 0:
             return
 
         self.df.fillna('', inplace=True)
-        self.setRowCount(self.df.shape[0])
-        self.setColumnCount(self.df.shape[1])
-        self.setHorizontalHeaderLabels(self.df.columns)
-
+        self.table.setRowCount(self.df.shape[0])
+        self.table.setColumnCount(self.df.shape[1])
+        self.table.setHorizontalHeaderLabels(self.df.columns)
 
         # returns pandas array object
         for row in self.df.iterrows():
@@ -67,17 +79,18 @@ class ExcelWriter(QTableWidget):
                 if isinstance(value, (float, int)):
                     value = '{0:0,.0f}'.format(value)
                 tableItem = QTableWidgetItem(str(value))
-                self.setItem(row[0], col_index, tableItem)
+                self.table.setItem(row[0], col_index, tableItem)
 
         # self.setColumnWidth(2, 300)
+
 
     def gatherInfos(self):
         self.infos = {}
 
-        self.infos["measName"] = "1"
-        self.infos["FilenName"] = "2"
+        self.infos["Name"] = "1"
+        self.infos["FName"] = "2"
         self.infos["Sample"] = "3"
-        self.infos["Frequency"] = "4"
+        self.infos["Freq"] = "4"
         self.infos["Power"] = "5"
         self.infos["Field"] = "6"
         self.infos["ModFreq"] = "7"
@@ -92,21 +105,22 @@ class ExcelWriter(QTableWidget):
     def addTableRow(self):
         self.gatherInfos() # Get infos
 
-        #Add new row to table
-        row = self.rowCount()+1
-        self.table.setRowCount(row)
+        #Add new row to table at the top
+        self.table.insertRow(0)
+        row = self.table.rowCount()
 
         # Fill new row and add new row to df
         infos = {}
         for colIndex, excelColumn in enumerate(self.excelItems):
-            tableItem = QTableWidgetItem().setText(str(self.infos.get(excelColumn)))
+            tableItem = QTableWidgetItem(str(self.infos.get(excelColumn)))
             infos[self.df.columns[colIndex]] = str(self.infos.get(excelColumn))
-            self.setItem(row, colIndex, tableItem)
+            self.table.setItem(0, colIndex, tableItem)
 
-        infos = pd.DataFrame(infos, columns=infos.keys(), index=[0])
-        self.df = pd.concat([self.df, infos])
+        #infos = pd.DataFrame(infos, columns=infos.keys(), index=[0])
+        #self.df = pd.concat([self.df, infos])
 
     def saveExcelData(self, excel_file_path, worksheet_name):
+        self.tableToDF()
         self.df.to_excel(excel_file_path, worksheet_name, index=False)
 
 
