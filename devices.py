@@ -27,8 +27,8 @@ class ExcelWriter:
         #self.horizontalHeader().setStretchLastSection(True)
         #self.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
 
-        self.excelItems = ['Name', 'FName', 'Sample', 'Freq', 'Power', 'Field', 'ModFreq', 'ModAmp', 'TC',
-                           'Calib', 'Notes', 'Short', 'VNA', 'Steps']
+        self.excelItems = ['Name', 'FName', 'Sample', 'MWFreq', 'MWPow', 'Field', 'ModFreq', 'ModAmp', 'TC',
+                           'CalibN', 'Notes', 'Short', 'VNA', 'Steps']
         try:
             self.df = pd.read_excel(xlsxPath, 'Tabelle1')
         except FileNotFoundError:
@@ -102,18 +102,17 @@ class ExcelWriter:
         self.infos["VNA"] = "0"
         self.infos["Steps"] = "00"
 
-    def addTableRow(self):
-        self.gatherInfos() # Get infos
+    def addTableRow(self, infos=None):
+        if infos == None: # Debugging
+            self.gatherInfos() # Get infos
 
         #Add new row to table at the top
         self.table.insertRow(0)
         row = self.table.rowCount()
 
         # Fill new row and add new row to df
-        infos = {}
         for colIndex, excelColumn in enumerate(self.excelItems):
-            tableItem = QTableWidgetItem(str(self.infos.get(excelColumn)))
-            infos[self.df.columns[colIndex]] = str(self.infos.get(excelColumn))
+            tableItem = QTableWidgetItem(str(infos.get(excelColumn)))
             self.table.setItem(0, colIndex, tableItem)
 
         #infos = pd.DataFrame(infos, columns=infos.keys(), index=[0])

@@ -62,6 +62,14 @@ class MyForm(QMainWindow):
         self.plotXState = True
         self.plotYState = True
 
+        self.ui.pausebutton.clicked.connect(self.debug)
+
+    def debug(self):
+        self.outputName = "DebugEntry"
+        self.gatherInfos()
+
+        self.ExcelWriter.addTableRow(self.infos)
+
     def initDevices(self):
         # Load ini-file (can be modified using the GUI or manually in the presets.ini file)
         config = ConfigParser()
@@ -182,15 +190,22 @@ class MyForm(QMainWindow):
     def gatherInfos(self):
         print("---------------gatherInfos is not correctly implemented!---------------")
         self.infos = {}
+        self.infos["FName"] = self.outputName
         self.infos["range"] = self.fieldRange
+        self.infos["Field"] = f"{self.ui.fieldfromval.text()}/{self.ui.fieldtoval.text()}/{self.fieldStep}"
         self.infos["stepSize"] = self.fieldStep
-        print("TimeConstant" ,float(self.ui.spinBoxTC.value()))
+        #print("TimeConstant" ,float(self.ui.spinBoxTC.value()))
         self.infos["TC"] = float(self.ui.spinBoxTC.value())
         self.infos["ModFreq"] = float(self.ui.spinBoxModFreq.value())
         self.infos["ModAmp"] = float(self.ui.spinBoxModAmp.value()) # Peak to Peak amplitude in V
         self.infos["avrg"] = 1
         self.infos["maxFieldSpeed"] = self.config["Magnet Powersupply"].get("Maximum field rate [mT/s]")
         self.infos["calibration"] = self.calibration
+        self.infos["CalibN"] = "calibMagnet.dat"
+        self.infos["Notes"] = ""
+        self.infos["Short"] = "/"
+        self.infos["VNA"] = "LockIn"
+        self.infos["Steps"] = str(0.0)
         self.infos["sweepDirection"] = self.sweepDirections[self.ui.comboBox_sweepDirection.currentIndex()]
         self.infos["MWFreq"] = float(self.ui.lineEditCWFreq.text())# GHz
         self.infos["MWPow"] = float(self.ui.lineEditCWPower.text()) # dBm
@@ -226,6 +241,8 @@ class MyForm(QMainWindow):
         self.outputFile.write("Magnetic Field [T]\tX-Channel\tY-Channel\tPhase\n")
         self.clearPlotData()
 
+        self.ExcelWriter.addTableRow(self.infos)
+
     def closeOutPutFile(self):
         self.outputFile.close()
 
@@ -241,6 +258,7 @@ class MyForm(QMainWindow):
             self.setField(0.0)
 
     def startFreqSweep(self):
+        self.newDataFile("FreqSweep")
         self.gatherInfos()
 
         self.measThread = FreqSweepMeasurement(self.Magnet, self.TslMeter,self.LockIn, self.FreqGen, self.infos)
@@ -252,7 +270,7 @@ class MyForm(QMainWindow):
 
         self.ui.progressBar.setMaximum(99)
 
-        self.newDataFile("FreqSweep")
+
         self.outputFile.write("Magnetic Field [T]\tX-Channel\tY-Channel\tPhase\tFrequency [GHz]\n")
         self.clearPlotData()
 
@@ -337,6 +355,7 @@ class MyForm(QMainWindow):
             pass
         now = datetime.now()
         name = measType + "_" + now.strftime("%d-%m-%y_%H-%M-%S") + ".dat"
+        self.outputName = name
         self.outputFile = stack.enter_context(open(name, "x"))
 
     def setField(self, val:float):
