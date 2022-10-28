@@ -5,7 +5,7 @@ import time
 from configparser import ConfigParser
 import pyvisa
 
-from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PyQt5.QtCore import QTimer, QThread
 from mainWindow import *
 from devices import *
@@ -89,10 +89,12 @@ class MyForm(QMainWindow):
         self.TslMeter = HallSensor(stack.enter_context(rm.open_resource(self.config["Hall Sensor"].get("address"))))
         #self.RedLab = RedLab()
         #self.LockIn = LockIn_SR830(stack.enter_context(rm.open_resource('GPIB0::8::INSTR')))
-
-        self.FreqGen = FreqGenerator(stack.enter_context(rm.open_resource(self.config["R&S-Frequency Generator"].get("address"))))
         self.Umschalter = FreqUmschalter(stack.enter_context(RedLabDigital(1)))
         self.Umschalter.setZirkulator(15.0)
+
+        self.FreqGen = FreqGenerator(stack.enter_context(rm.open_resource(self.config["R&S-Frequency Generator"].get("address"))),
+                                     self.Umschalter)
+
         #self.Kthly = Keithley2000(stack.enter_context(rm.open_resource(self.config["Keithley 2000"].get("address"))))
 
         self.LockIn = LockIn_Zurich()
@@ -106,6 +108,10 @@ class MyForm(QMainWindow):
         # 2: Ang-Dep-Field-Domain
         # 3: Ang-Dep-Freq-Domain
         measType = self.ui.comboBox.currentIndex()
+        try:
+            self.ui.startbutton.pressed.disconnect()
+        except TypeError as e:
+            print(e)
         self.ui.startbutton.pressed.connect(self.measurementTypes[measType])
 
         self.ui.sampleAngleTo.setEnabled(False)
@@ -225,6 +231,7 @@ class MyForm(QMainWindow):
         print(args)
 
     def startFieldSweep(self):
+        print("run Better")
         self.newDataFile("FieldSweep")
         self.gatherInfos()
         self.measThread = SweepMeasurement(self.Magnet, self.TslMeter, self.FreqGen, self.LockIn, self.infos)
@@ -262,17 +269,34 @@ class MyForm(QMainWindow):
         self.newDataFile("FreqSweep")
         self.gatherInfos()
 
+
+        fname = QFileDialog.getOpenFileName(self, 'Open Frequency list', '/home')
+        if fname[0]:
+            freqSweepData = np.loadtxt(fname[0]) # I will change this later!
+        else:
+            return
+
+        self.infos["MWFreq"] = 'FreqSweep'
+        self.infos['FreqSweep'] = freqSweepData
+
         self.measThread = FreqSweepMeasurement(self.Magnet, self.TslMeter,self.LockIn, self.FreqGen, self.infos)
         self.measThread.start()
-        self.measThread.dataOutSig.connect(self.getFreqSweepData)
+        self.measThread.freqDataOutSig.connect(self.getFreqSweepData)
         self.measThread.fieldMoveSig.connect(self.isFieldMoving)
+        self.measThread.freqSweepDoneSig.connect(self.freqSweepDone)
         self.measThread.meterUsageSig.connect(self.toggleFieldTimer)
         self.measThread.errorSig.connect(self.errorMSG)
+        self.measThread.finished.connect(self.closeOutPutFile)
 
         self.ui.progressBar.setMaximum(99)
 
+        self.outputFile.write("Magnetic Field [T]\tX-Channel\tY-Channel\tPhase\tFrequency [GHz]\tPower [dBm]\n")
+        self.clearPlotData()
 
-        self.outputFile.write("Magnetic Field [T]\tX-Channel\tY-Channel\tPhase\tFrequency [GHz]\n")
+        self.ExcelWriter.addTableRow(self.infos)
+
+    def freqSweepDone(self):
+        # will be called after every complete freq sweep
         self.clearPlotData()
 
     def startFieldAngDep(self):
@@ -328,13 +352,18 @@ class MyForm(QMainWindow):
         self.field = data["field"]
         self.ui.fieldlabel.setText(str(self.field) + " [mT]")
 
+        freq = data['freq']
+        pow = data['pow']
+        freq_data = str(freq) + ' GHz at ' + str(pow) + ' dBm'
+        self.ui.angle_freq_label.setText(freq_data)
+
         data = data["data"]
         self.plotData["field"].append(self.field/1000)
         self.plotData["x"].append(float(data["x"]))
         self.plotData["y"].append(float(data["y"]))
         self.plotData["phase"].append(float(data["phase"]))
 
-        self.outputFile.write(f"{self.field}\t{self.plotData['x'][-1]}\t{self.plotData['y'][-1]}\t{self.plotData['phase'][-1]}\t{data['freq']}\n")
+        self.outputFile.write(f"{self.field}\t{self.plotData['x'][-1]}\t{self.plotData['y'][-1]}\t{self.plotData['phase'][-1]}\t{freq}\t{pow}\n")
 
         self.updatePlot()
 

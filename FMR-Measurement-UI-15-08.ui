@@ -40,6 +40,13 @@
       </property>
      </widget>
     </item>
+    <item row="4" column="2">
+     <widget class="QPushButton" name="stopbutton">
+      <property name="text">
+       <string>Stop</string>
+      </property>
+     </widget>
+    </item>
     <item row="1" column="1">
      <widget class="QLabel" name="healthlabel">
       <property name="text">
@@ -50,34 +57,20 @@
       </property>
      </widget>
     </item>
-    <item row="4" column="2">
-     <widget class="QPushButton" name="stopbutton">
+    <item row="4" column="1">
+     <widget class="QPushButton" name="pausebutton">
       <property name="text">
-       <string>Stop</string>
+       <string>Pause</string>
       </property>
      </widget>
     </item>
     <item row="1" column="2">
-     <widget class="QLabel" name="anglelabel">
+     <widget class="QLabel" name="angle_freq_label">
       <property name="text">
        <string>NaN</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="0">
-     <widget class="QPushButton" name="startbutton">
-      <property name="text">
-       <string>Start</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="1">
-     <widget class="QPushButton" name="pausebutton">
-      <property name="text">
-       <string>Pause</string>
       </property>
      </widget>
     </item>
@@ -96,6 +89,13 @@
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QPushButton" name="startbutton">
+      <property name="text">
+       <string>Start</string>
       </property>
      </widget>
     </item>

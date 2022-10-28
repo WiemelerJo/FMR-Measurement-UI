@@ -228,11 +228,12 @@ class FreqUmschalter():
             return False
 
 class FreqGenerator():
-    def __init__(self, device:pyvisa.Resource):
+    def __init__(self, device:pyvisa.Resource, Umschalter:FreqUmschalter):
         print("Frequency generator connected!")
         print(device.query("*IDN?"))
 
         self.device = device
+        self.umschalter = Umschalter
 
         self.deviceInit()
 
@@ -259,7 +260,10 @@ class FreqGenerator():
     def getPower(self) -> str:
         return self.query(':POW?')
 
-    def setFreq(self, freq:float):
+    def setFreq(self, freq:float, useUmschalter:bool=False):
+        if useUmschalter:
+            self.umschalter.setZirkulator(freq)
+            time.sleep(0.1)
         self.write(f':SOUR:FREQ:CW {freq} GHz')
 
     def getFreq(self) -> str:
