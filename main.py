@@ -225,6 +225,7 @@ class MyForm(QMainWindow):
         print(args)
 
     def startFieldSweep(self):
+        self.newDataFile("FieldSweep")
         self.gatherInfos()
         self.measThread = SweepMeasurement(self.Magnet, self.TslMeter, self.FreqGen, self.LockIn, self.infos)
 
@@ -237,7 +238,7 @@ class MyForm(QMainWindow):
 
         self.ui.progressBar.setMaximum(99)
 
-        self.newDataFile("FieldSweep")
+
         self.outputFile.write("Magnetic Field [T]\tX-Channel\tY-Channel\tPhase\n")
         self.clearPlotData()
 
