@@ -10,7 +10,7 @@ from scipy.signal import argrelextrema
 from typing import List
 from datetime import datetime
 from configparser import ConfigParser
-from devices import Keithley2000, FreqGenerator, FreqUmschalter, RedLabDigital
+from Lib.devices import Keithley2000, FreqGenerator, FreqUmschalter, RedLabDigital
 from DiodeUI import *
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal

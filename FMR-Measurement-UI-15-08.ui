@@ -27,7 +27,7 @@
        <bool>true</bool>
       </property>
       <property name="sizePolicy">
-       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -74,24 +74,6 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="fieldlabel">
-      <property name="font">
-       <font>
-        <pointsize>12</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>NaN</string>
-      </property>
-      <property name="textFormat">
-       <enum>Qt::AutoText</enum>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
     <item row="4" column="0">
      <widget class="QPushButton" name="startbutton">
       <property name="text">
@@ -113,6 +95,34 @@
       </property>
       <property name="textVisible">
        <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="fieldlabel">
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>NaN</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="3">
+     <widget class="QScrollBar" name="spectraScrollBar">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
       </property>
      </widget>
     </item>
@@ -664,12 +674,12 @@
   <customwidget>
    <class>Plot_pyqtgraph</class>
    <extends>QGraphicsView</extends>
-   <header>customwidgets</header>
+   <header>Lib.customwidgets</header>
   </customwidget>
   <customwidget>
    <class>SpinBox_custom</class>
    <extends>QDoubleSpinBox</extends>
-   <header>customwidgets</header>
+   <header>Lib.customwidgets</header>
   </customwidget>
  </customwidgets>
  <resources/>

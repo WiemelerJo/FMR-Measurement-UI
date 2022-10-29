@@ -10,7 +10,6 @@ from mcculw import ul, enums
 from mcculw.device_info import DaqDeviceInfo
 
 import zhinst.utils
-import zhinst.core as ziPython
 
 from PyQt5.QtCore import pyqtSignal, QThread
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QAbstractScrollArea, QScrollBar

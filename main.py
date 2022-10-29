@@ -8,13 +8,13 @@ import pyvisa
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PyQt5.QtCore import QTimer, QThread
 from mainWindow import *
-from devices import *
+from Lib.devices import *
 from scipy.interpolate import interp1d
 from datetime import datetime
 from array import array
-from customwidgets import *
+from Lib.customwidgets import *
 
-from Measurement import SweepMeasurement, FreqSweepMeasurement
+from Lib.Measurement import SweepMeasurement, FreqSweepMeasurement
 
 from contextlib import ExitStack
 
@@ -40,6 +40,7 @@ class MyForm(QMainWindow):
         self.ui.fieldtoval.editingFinished.connect(self.setFieldRange)
         self.ui.dBspinboxFieldIncr.valueChanged.connect(self.setFieldRange)
         self.ui.stopbutton.clicked.connect(self.stopThread)
+        self.ui.spectraScrollBar.valueChanged.connect(self.spectraSelect)
 
         self.ui.comboBox.currentIndexChanged.connect(self.changeMeasurementType)
         self.changeMeasurementType()
@@ -63,6 +64,7 @@ class MyForm(QMainWindow):
         self.plotYState = True
 
         self.ui.pausebutton.clicked.connect(self.debug)
+        self.ui.spectraScrollBar.setMaximum(0)
 
     def debug(self):
         self.outputName = "DebugEntry"
@@ -114,6 +116,7 @@ class MyForm(QMainWindow):
             print(e)
         self.ui.startbutton.pressed.connect(self.measurementTypes[measType])
 
+        self.ui.spectraScrollBar.setEnabled(False)
         self.ui.sampleAngleTo.setEnabled(False)
         self.ui.sampleAngleFrom.setEnabled(False)
         self.ui.spinBoxAngleStep.setEnabled(False)
@@ -123,11 +126,13 @@ class MyForm(QMainWindow):
 
         if measType == 1:
             # FreqSweep
+            self.ui.spectraScrollBar.setEnabled(True)
             self.ui.frequenciesTo.setEnabled(True)
             self.ui.frequenciesFrom.setEnabled(True)
             self.ui.spinBoxFreqStep.setEnabled(True)
         elif measType == 2:
             # Angdep
+            self.ui.spectraScrollBar.setEnabled(True)
             self.ui.sampleAngleTo.setEnabled(True)
             self.ui.sampleAngleFrom.setEnabled(True)
             self.ui.spinBoxAngleStep.setEnabled(True)
