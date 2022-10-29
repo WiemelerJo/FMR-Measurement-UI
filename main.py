@@ -72,6 +72,9 @@ class MyForm(QMainWindow):
 
         self.ExcelWriter.addTableRow(self.infos)
 
+    def spectraSelect(self):
+        return
+
     def initDevices(self):
         # Load ini-file (can be modified using the GUI or manually in the presets.ini file)
         config = ConfigParser()
