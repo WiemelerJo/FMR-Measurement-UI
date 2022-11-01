@@ -3,7 +3,7 @@ import json
 
 from lmfit import Parameters, Model
 from dataclasses import dataclass, asdict, field
-from tools.func_gen import *
+from func_gen import *
 
 Fit_Models = Fit_Models()
 
@@ -17,7 +17,10 @@ class Spectra:
 
     x_data: np.array
     y_data: np.array
-    angle: float
+    field_data: np.array
+    phase_array: np.array
+
+    angle_or_freq: float
     spectra_index: int
 
     function_str: str | None = field(init=False, repr=True)

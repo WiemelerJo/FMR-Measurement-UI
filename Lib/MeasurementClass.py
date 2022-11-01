@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 
 try:
-    from lib.Spectra import Spectra
+    from Lib.SpectraClass import Spectra
 except ModuleNotFoundError:
-    from Spectra import Spectra
+    from SpectraClass import Spectra
 from typing import List, Union
 
 
@@ -158,14 +158,6 @@ if __name__ == '__main__':
     meas1 = Measurement()
 
     for i in range(0, 360):
-        meas1.append(Spectra(np.arange(0, 4096, 1), np.arange(0, 4096, 1), float(i), int(i)))
+        meas1.append(Spectra(np.arange(0, 4096, 1), np.arange(0, 4096, 1), np.arange(0, 4096, 1), np.arange(0, 4096, 1), float(i), int(i)))
 
     print(len(meas1))
-    meas1.loadMeasurement(r"C:\Users\Jonas\Desktop\exp_data - Kopie - Kopie.dat")
-    print(len(meas1))
-
-    print(meas1.dumps())
-    # random.shuffle(meas1)
-    # print(meas1(1 ,2, 3))
-    # print(max(meas1).spectra_index)
-    # print(meas1.isIndexed(test_spec))

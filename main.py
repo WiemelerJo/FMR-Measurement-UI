@@ -8,12 +8,15 @@ import pyvisa
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PyQt5.QtCore import QTimer, QThread
 from mainWindow import *
-from Lib.devices import *
+
 from scipy.interpolate import interp1d
 from datetime import datetime
 from array import array
-from Lib.customwidgets import *
 
+from Lib.SpectraClass import Spectra
+from Lib.MeasurementClass import Measurement
+from Lib.devices import *
+from Lib.customwidgets import *
 from Lib.Measurement import SweepMeasurement, FreqSweepMeasurement
 
 from contextlib import ExitStack
