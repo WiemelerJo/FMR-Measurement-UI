@@ -1,0 +1,53 @@
+#Linear
+Args: slope, offset
+Bounds: (-Nan,Nan), (-Nan,Nan)
+StepSize: 0.1, 0.1
+InitVals: 0.5, 1.0
+Function: slope*B+offset
+/End
+
+#Lorentz
+Args: dB, R, A
+Bounds: (0,1.5), (0,2.5), (0,Nan)
+StepSize: 0.0001, 0.0001, 0.1
+InitVals: 0.005, 0.07, 1.5
+Function: -32*A*dB**3*(B-R)/(3*dB**2+4*(B-R)**2)**2
+/END
+
+#Lorentz-Example-wo-bounds
+Args: dB, R, A
+Function: -32*A*dB**3*(B-R)/(3*dB**2+4*(B-R)**2)**2
+/END
+
+#Asym-Lorentz-f-domain
+Args: Br, sA, aA, LW
+Bounds: (0,2.5), (0,Nan), (0,Nan), (0,1.5)
+StepSize: 0.001, 0.1, 0.1, 0.001
+InitVals: 0.05, 1.5, 1.5, 0.005
+Function: 2*aA*((1 + 4*((B - Br)/(2*LW/2))**2)*(2*LW/2))**(-1) - 8*sA*(B - Br)*(((1 + 4*((B - Br)/(2*LW/2))**2)**2)*((2*LW/2)**2))**(-1) - 16*aA*(B - Br)**2*(((1 + 4*((B - Br)/(2*LW/2))**2)**2)*((2*LW/2)**3))**(-1)
+/END
+
+#Dyson
+Args: alpha, dB, R, A
+Bounds: (0,1.0), (0,1.5), (0,2.5), (0,Nan)
+StepSize: 0.001, 0.001, 0.001, 0.1
+InitVals: 0.00001, 0.005, 0.07, 1.5
+Function: (4*A*dB**2*(3*alpha*dB-4*alpha*(B-R)**2-8*m.sqrt(3)*dB*(B-R)))/(m.sqrt(3)*(4*(B-R)**2+3*dB**2)**2)
+/END
+
+#Dyson-Unrestricted
+Args: alpha, dB, R, A
+Bounds: (-Nan,Nan), (0,1.5), (0,2.5), (0,Nan)
+StepSize: 0.001, 0.001, 0.001, 0.1
+InitVals: 0.0, 0.005, 0.07, 1.5
+Function: (4*A*dB**2*(3*alpha*dB-4*alpha*(B-R)**2-8*m.sqrt(3)*dB*(B-R)))/(m.sqrt(3)*(4*(B-R)**2+3*dB**2)**2)
+/END
+
+#Complex-Lorentz
+Args: dBpp, Br, A, phi
+Bounds: (0,1.5), (0,2.5), (0,Nan), (-Nan,Nan)
+StepSize: 0.001, 0.001, 0.1, 0.001
+InitVals: 0.005, 0.0, 1.5, 0.0
+Function: A*(m.sin(phi)*(0.75*dBpp**2+(B-Br)**2)-2*(m.sqrt(3)/2*dBpp*m.cos(phi)+(B-Br)*m.sin(phi))*(B-Br))/(0.75*dBpp**2+(B-Br)**2)**2
+/END
+
